@@ -1,15 +1,21 @@
 # Render Blueprint — one-click deploy of AEROS · DEL
 # https://render.com/docs/blueprint-spec
+# Native Python runtime (not Docker): faster free-tier builds and readable
+# deploy logs. Dockerfile is kept in-repo as a local alternative.
 services:
   - type: web
     name: aeros-del
-    runtime: docker
+    runtime: python
     plan: free
+    buildCommand: "pip install -r backend/requirements-core.txt"
+    startCommand: "python backend/run.py"
     healthCheckPath: /api/v1/health
     autoDeploy: true
     # NOTE: Do NOT set PORT here — Render injects $PORT (default 10000)
     # run.py already reads env PORT, so it binds correctly.
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.0"
       - key: DEMO_MODE
         value: "false"
       - key: DATA_REFRESH_INTERVAL
