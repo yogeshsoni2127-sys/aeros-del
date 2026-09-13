@@ -1,9 +1,9 @@
 {
   "station_id": "burari",
   "station_name": "Burari Crossing, New Delhi - IMD",
-  "generated_at": "2026-09-13T20:32:02.934277+00:00",
+  "generated_at": "2026-09-13T20:34:26.506662+00:00",
   "source": "sih-p2 ensemble (TFT+XGBoost+LightGBM)",
-  "source_file": "forecast_aqi_72h_d84bdae5.csv",
+  "source_file": "forecast_aqi_72h_dc2c7bfb.csv",
   "downscaled": true,
   "native_resolution": "daily",
   "diurnal_note": "hourly shape = cosine peak per pollutant, amplitude scaled per station by observed day-to-day CoV; 24h mean == model daily value exactly; day junctions smoothed",
