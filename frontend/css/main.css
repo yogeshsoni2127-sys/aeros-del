@@ -1,23 +1,51 @@
 /* ═══════════════════════════════════════════════════════════════
-   AEROS — Design System & Tokens
+   AEROS — Design System & Tokens (Apple gallery edition)
+   Photography-first chrome: parchment canvas, white utility cards,
+   near-black tiles, one Action Blue. No decorative gradients, no
+   shadows on chrome.
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
-  /* ── Colors ─────────────────────────────────────────────────── */
-  --bg-deep: #0a0e27;
-  --bg-panel: rgba(255, 255, 255, 0.06);
-  --bg-panel-strong: rgba(18, 24, 56, 0.85);
-  --electric: #00d4ff;
-  --toxic: #39ff14;
-  --amber: #ffb800;
-  --danger: #ff3838;
-  --glass: rgba(255, 255, 255, 0.06);
-  --glass-border: rgba(255, 255, 255, 0.10);
-  --text-strong: #ffffff;
-  --text-mid: rgba(255, 255, 255, 0.72);
-  --text-dim: rgba(255, 255, 255, 0.45);
+  /* ── Apple surfaces ─────────────────────────────────────────── */
+  --canvas: #ffffff;
+  --canvas-parchment: #f5f5f7;
+  --surface-pearl: #fafafc;
+  --surface-tile-1: #272729;
+  --surface-tile-2: #2a2a2c;
+  --surface-tile-3: #252527;
+  --surface-black: #000000;
 
-  /* AQI scale */
+  /* ── Ink ────────────────────────────────────────────────────── */
+  --ink: #1d1d1f;
+  --ink-80: #333333;
+  --ink-48: #7a7a7a;
+  --on-dark: #ffffff;
+  --body-muted-dark: #cccccc;
+
+  /* ── The single accent ──────────────────────────────────────── */
+  --primary: #0066cc;
+  --primary-focus: #0071e3;
+  --primary-on-dark: #2997ff;
+
+  /* ── Hairlines ──────────────────────────────────────────────── */
+  --hairline: #e0e0e0;
+  --divider-soft: #f0f0f0;
+
+  /* ── Legacy aliases (same layout files, Apple values) ───────── */
+  --bg-deep: var(--canvas-parchment);
+  --bg-panel: var(--canvas);
+  --bg-panel-strong: var(--canvas);
+  --electric: var(--primary);
+  --toxic: #00a651;
+  --amber: #b26a00;
+  --danger: #d70015;
+  --glass: var(--canvas);
+  --glass-border: var(--hairline);
+  --text-strong: var(--ink);
+  --text-mid: var(--ink-80);
+  --text-dim: var(--ink-48);
+
+  /* AQI scale (data semantics — unchanged) */
   --aqi-good: #00e400;
   --aqi-satisfactory: #9cff9c;
   --aqi-moderate: #ffff00;
@@ -26,25 +54,29 @@
   --aqi-severe: #99004c;
   --aqi-severe-plus: #7e0023;
 
-  /* ── Typography ─────────────────────────────────────────────── */
-  --font-head: 'Inter', system-ui, sans-serif;
-  --font-data: 'JetBrains Mono', monospace;
-  --font-body: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* ── Typography: SF-first stack, Inter fallback ─────────────── */
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif;
+  --font-text: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
+  --font-head: var(--font-display);
+  --font-data: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  --font-body: var(--font-text);
 
-  /* ── Shape & elevation ──────────────────────────────────────── */
+  /* ── Shape (Apple radii) ────────────────────────────────────── */
   --radius-sm: 8px;
-  --radius-md: 14px;
-  --radius-lg: 20px;
-  --glow-electric: 0 0 18px rgba(0, 212, 255, 0.35);
-  --glow-green: 0 0 18px rgba(57, 255, 20, 0.30);
-  --glow-red: 0 0 22px rgba(255, 56, 56, 0.45);
-  --shadow-panel: 0 10px 40px rgba(0, 0, 0, 0.5);
+  --radius-md: 11px;
+  --radius-lg: 18px;
+  --radius-pill: 9999px;
+
+  /* Elevation: none on chrome. (No --glow-*, no panel shadows.) */
+  --shadow-panel: none;
 
   /* ── Spacing ────────────────────────────────────────────────── */
-  --space-1: 6px;
-  --space-2: 12px;
-  --space-3: 20px;
-  --space-4: 32px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 24px;
+  --space-5: 32px;
+  --space-section: 48px;
 }
 
 * {
@@ -59,10 +91,11 @@ html, body {
 
 body {
   font-family: var(--font-body);
-  background:
-    radial-gradient(1200px 600px at 80% -10%, rgba(0, 212, 255, 0.08), transparent 60%),
-    radial-gradient(1000px 700px at 10% 110%, rgba(57, 255, 20, 0.05), transparent 60%),
-    var(--bg-deep);
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1.47;
+  letter-spacing: -0.374px;
+  background: var(--canvas-parchment);
   color: var(--text-strong);
   overflow: hidden;
 }
@@ -70,21 +103,21 @@ body {
 h1, h2, h3 {
   font-family: var(--font-head);
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: -0.28px;
 }
 
 .accent {
-  color: var(--electric);
+  color: var(--primary);
 }
 
-/* Scrollbars */
+/* Scrollbars: quiet hairline style */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.14);
+  background: #d2d2d7;
   border-radius: 8px;
 }
-::-webkit-scrollbar-thumb:hover { background: rgba(0, 212, 255, 0.4); }
+::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
 /* Utility */
 .mono { font-family: var(--font-data); }
@@ -92,3 +125,7 @@ h1, h2, h3 {
 .strong { color: var(--text-strong); }
 
 button, input { font-family: var(--font-body); outline: none; }
+button:focus-visible { outline: 2px solid var(--primary-focus); }
+button:active { transform: scale(0.95); }
+
+a { color: var(--primary); }

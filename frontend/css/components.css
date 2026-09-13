@@ -1,12 +1,12 @@
 /* ═══════════════════════════════════════════════════════════════
-   AEROS — Reusable Component Styles
+   AEROS — Reusable Component Styles (Apple gallery edition)
    ═══════════════════════════════════════════════════════════════ */
 
-/* ── Loading shimmer ──────────────────────────────────────────── */
+/* ── Loading shimmer (pearl, flat) ────────────────────────────── */
 .shimmer {
   position: relative;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-pearl);
   border-radius: var(--radius-sm);
 }
 .shimmer::after {
@@ -17,7 +17,7 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.09),
+    rgba(0, 0, 0, 0.05),
     transparent
   );
   animation: shimmer 1.4s infinite;
@@ -28,19 +28,20 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: var(--font-data);
-  font-size: 11px;
-  font-weight: 600;
-  padding: 3px 10px;
-  border-radius: 999px;
-  border: 1px solid currentColor;
+  font-size: 12px;
+  font-weight: 400;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--divider-soft);
+  background: var(--surface-pearl);
+  color: var(--ink-80);
 }
 
 /* ── Skeleton generic ─────────────────────────────────────────── */
 .skeleton {
   background: linear-gradient(
-    100deg, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.11) 50%,
-    rgba(255,255,255,0.05) 60%
+    100deg, var(--divider-soft) 40%, var(--hairline) 50%,
+    var(--divider-soft) 60%
   );
   background-size: 200% 100%;
   animation: skeleton 1.2s linear infinite;
@@ -52,59 +53,59 @@
 /* ── Header "last updated" stamp ────────────────────────────────── */
 .updated {
   font-family: var(--font-data);
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-dim);
   white-space: nowrap;
 }
 
-/* ── Station search ─────────────────────────────────────────────── */
+/* ── Station search: the search-input pill ──────────────────────── */
 .station-search-wrap { margin-bottom: 8px; }
 .station-search {
   width: 100%;
-  font-size: 12px;
+  height: 44px;
+  font-size: 17px;
   color: var(--text-strong);
-  background: rgba(255,255,255,0.05);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-sm);
-  padding: 7px 10px;
+  background: var(--canvas);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-pill);
+  padding: 12px 20px;
   outline: none;
 }
 .station-search::placeholder { color: var(--text-dim); }
-.station-search:focus { border-color: var(--electric); box-shadow: var(--glow-electric); }
+.station-search:focus { border-color: var(--primary); }
 
-/* ── Mini action button (CSV export) ────────────────────────────── */
+/* ── Mini action button: ghost pill ─────────────────────────────── */
 .mini-btn {
-  font-family: var(--font-data);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: var(--text-mid);
+  font-size: 14px;
+  letter-spacing: -0.224px;
+  color: var(--primary);
   background: transparent;
-  border: 1px solid var(--glass-border);
-  border-radius: 999px;
-  padding: 3px 12px;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-pill);
+  padding: 11px 22px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform 0.15s;
 }
-.mini-btn:hover { color: var(--toxic); border-color: var(--toxic); }
+.mini-btn:hover { color: var(--primary); }
+.mini-btn:active { transform: scale(0.95); }
 
-/* ── Advisory language toggle ───────────────────────────────────── */
+/* ── Advisory language toggle: configurator chips ───────────────── */
 .lang-toggle { display: flex; gap: 4px; }
 .lang-toggle button {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--glass-border);
-  background: transparent;
-  color: var(--text-dim);
+  font-size: 14px;
+  padding: 12px 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hairline);
+  background: var(--canvas);
+  color: var(--ink);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: border-color 0.15s;
 }
 .lang-toggle button.active {
-  color: var(--electric);
-  border-color: var(--electric);
-  background: rgba(0,212,255,0.12);
+  color: var(--ink);
+  border: 2px solid var(--primary-focus);
+  background: var(--canvas);
+  padding: 11px 15px;
 }
 
 /* ── Ticker: pause on hover so advisories stay readable ─────────── */

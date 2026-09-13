@@ -6,7 +6,7 @@
   'use strict';
 
   const SEVERITY_COLOR = {
-    Low: '#39ff14',
+    Low: '#00e400',
     Moderate: '#ffb800',
     High: '#ff7e00',
     Critical: '#ff3838',

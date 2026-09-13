@@ -122,8 +122,8 @@
           datasets.push({
             label: 'Observed (past 24h)',
             data: hist.map((r) => (r[key] != null ? r[key] : null)),
-            borderColor: '#39ff14',
-            backgroundColor: 'rgba(57,255,20,0.06)',
+            borderColor: '#1d1d1f',
+            backgroundColor: 'rgba(29,29,31,0.06)',
             borderWidth: 2,
             pointRadius: 0,
             tension: 0.3,
@@ -133,7 +133,7 @@
         datasets.push({
           label: `${Utils.pollutantName(key)} forecast`,
           data: pad.concat(base),
-          borderColor: '#00d4ff',
+          borderColor: '#0066cc',
           backgroundColor: (ctx) => this._gradientFill(ctx),
           fill: hist.length ? false : true,
           borderWidth: 2.5,
@@ -143,8 +143,8 @@
         datasets.push({
           label: 'Upper bound (90th)',
           data: pad.concat(hi),
-          borderColor: 'rgba(0,212,255,0.25)',
-          backgroundColor: 'rgba(0,212,255,0.08)',
+          borderColor: 'rgba(0,102,204,0.35)',
+          backgroundColor: 'rgba(0,102,204,0.08)',
           borderDash: [4, 4],
           pointRadius: 0,
           fill: '-1',
@@ -153,7 +153,7 @@
         datasets.push({
           label: 'Lower bound (10th)',
           data: pad.concat(lo),
-          borderColor: 'rgba(0,212,255,0.25)',
+          borderColor: 'rgba(0,102,204,0.35)',
           borderDash: [4, 4],
           pointRadius: 0,
           fill: false,
@@ -165,8 +165,8 @@
         datasets.push({
           label: Utils.pollutantName(this.pollutant),
           data: (f[this.pollutant] || []),
-          borderColor: '#39ff14',
-          backgroundColor: 'rgba(57,255,20,0.08)',
+          borderColor: '#1d1d1f',
+          backgroundColor: 'rgba(29,29,31,0.08)',
           fill: true,
           borderWidth: 2,
           pointRadius: 0,
@@ -181,10 +181,10 @@
 
     _gradientFill(ctx) {
       const { chartArea } = ctx.chart;
-      if (!chartArea) return 'rgba(0,212,255,0.1)';
+      if (!chartArea) return 'rgba(0,102,204,0.10)';
       const g = ctx.chart.ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-      g.addColorStop(0, 'rgba(0,212,255,0.30)');
-      g.addColorStop(1, 'rgba(0,212,255,0.0)');
+      g.addColorStop(0, 'rgba(0,102,204,0.25)');
+      g.addColorStop(1, 'rgba(0,102,204,0.0)');
       return g;
     }
 

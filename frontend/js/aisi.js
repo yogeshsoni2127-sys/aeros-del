@@ -127,10 +127,10 @@
       const y = h - ((v - min) / span) * (h - 6) - 3;
       i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
     });
-    ctx.strokeStyle = color || '#00d4ff';
+    ctx.strokeStyle = color || '#0066cc';
     ctx.lineWidth = 2;
-    ctx.shadowColor = color || '#00d4ff';
-    ctx.shadowBlur = 6;
+    ctx.shadowColor = color || '#0066cc';
+    ctx.shadowBlur = 0;
     ctx.stroke();
   }
 
