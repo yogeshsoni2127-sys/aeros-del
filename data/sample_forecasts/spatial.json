@@ -6,6 +6,24 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
+          77.1305,
+          28.8004
+        ]
+      },
+      "properties": {
+        "id": "alipur",
+        "name": "Alipur",
+        "pm25": 63.7,
+        "aqi": 113.0,
+        "category": "Moderate",
+        "color": "#ffff00"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
           77.3164,
           28.6469
         ]
@@ -13,10 +31,10 @@
       "properties": {
         "id": "anand-vihar",
         "name": "Anand Vihar",
-        "pm25": 97.1,
-        "aqi": 221.8,
-        "category": "Poor",
-        "color": "#ff7e00"
+        "pm25": 91.7,
+        "aqi": 227.0,
+        "category": "Very Poor",
+        "color": "#ff0000"
       }
     },
     {
@@ -24,51 +42,15 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.131,
-          28.6736
+          77.1775,
+          28.6954
         ]
       },
       "properties": {
-        "id": "punjabi-bagh",
-        "name": "Punjabi Bagh",
-        "pm25": 91.6,
-        "aqi": 203.0,
-        "category": "Poor",
-        "color": "#ff7e00"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          77.1744,
-          28.5651
-        ]
-      },
-      "properties": {
-        "id": "rk-puram",
-        "name": "RK Puram",
-        "pm25": 97.1,
-        "aqi": 221.8,
-        "category": "Poor",
-        "color": "#ff7e00"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          77.2413,
-          28.6289
-        ]
-      },
-      "properties": {
-        "id": "ito",
-        "name": "ITO",
-        "pm25": 77.7,
-        "aqi": 158.0,
+        "id": "ashok-vihar",
+        "name": "Ashok Vihar",
+        "pm25": 70.2,
+        "aqi": 134.0,
         "category": "Moderate",
         "color": "#ffff00"
       }
@@ -78,51 +60,15 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.1111,
-          28.75
+          77.103,
+          28.4709
         ]
       },
       "properties": {
-        "id": "dtu",
-        "name": "DTU",
-        "pm25": 91.6,
-        "aqi": 203.0,
-        "category": "Poor",
-        "color": "#ff7e00"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          77.2009,
-          28.6362
-        ]
-      },
-      "properties": {
-        "id": "mandir-marg",
-        "name": "Mandir Marg",
-        "pm25": 97.1,
-        "aqi": 221.8,
-        "category": "Poor",
-        "color": "#ff7e00"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          77.287,
-          28.6237
-        ]
-      },
-      "properties": {
-        "id": "patparganj",
-        "name": "Patparganj",
-        "pm25": 87.4,
-        "aqi": 191.1,
+        "id": "aya-nagar",
+        "name": "Aya Nagar",
+        "pm25": 56.6,
+        "aqi": 105.0,
         "category": "Moderate",
         "color": "#ffff00"
       }
@@ -132,17 +78,17 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.251,
-          28.569
+          77.201,
+          28.7618
         ]
       },
       "properties": {
-        "id": "nehru-nagar",
-        "name": "Nehru Nagar",
-        "pm25": 97.1,
-        "aqi": 221.8,
-        "category": "Poor",
-        "color": "#ff7e00"
+        "id": "burari",
+        "name": "Burari",
+        "pm25": 62.6,
+        "aqi": 109.0,
+        "category": "Moderate",
+        "color": "#ffff00"
       }
     },
     {
@@ -150,17 +96,17 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.271,
-          28.5309
+          77.1251,
+          28.5942
         ]
       },
       "properties": {
-        "id": "okhla",
-        "name": "Okhla",
-        "pm25": 97.1,
-        "aqi": 221.8,
-        "category": "Poor",
-        "color": "#ff7e00"
+        "id": "cantonment",
+        "name": "Cantonment",
+        "pm25": 44.6,
+        "aqi": 78.0,
+        "category": "Satisfactory",
+        "color": "#92d050"
       }
     },
     {
@@ -168,17 +114,17 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.2158,
-          28.5504
+          77.272,
+          28.6158
         ]
       },
       "properties": {
-        "id": "sirifort",
-        "name": "Siri Fort",
-        "pm25": 97.1,
-        "aqi": 221.8,
-        "category": "Poor",
-        "color": "#ff7e00"
+        "id": "commonwealth",
+        "name": "Commonwealth",
+        "pm25": 65.1,
+        "aqi": 117.0,
+        "category": "Moderate",
+        "color": "#ffff00"
       }
     },
     {
@@ -186,35 +132,17 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.1654,
-          28.6998
+          77.273,
+          28.551
         ]
       },
       "properties": {
-        "id": "wazirpur",
-        "name": "Wazirpur",
-        "pm25": 114.5,
-        "aqi": 281.2,
-        "category": "Poor",
-        "color": "#ff7e00"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          77.0558,
-          28.7332
-        ]
-      },
-      "properties": {
-        "id": "rohini",
-        "name": "Rohini",
-        "pm25": 91.6,
-        "aqi": 203.0,
-        "category": "Poor",
-        "color": "#ff7e00"
+        "id": "crri-mathura",
+        "name": "CRRI Mathura Rd",
+        "pm25": 60.1,
+        "aqi": 101.0,
+        "category": "Moderate",
+        "color": "#ffff00"
       }
     },
     {
@@ -229,10 +157,154 @@
       "properties": {
         "id": "dwarka-sec8",
         "name": "Dwarka",
-        "pm25": 97.1,
-        "aqi": 221.8,
+        "pm25": 53.7,
+        "aqi": 125.0,
+        "category": "Moderate",
+        "color": "#ffff00"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.2012,
+          28.4936
+        ]
+      },
+      "properties": {
+        "id": "ignou",
+        "name": "IGNOU",
+        "pm25": 52.8,
+        "aqi": 107.0,
+        "category": "Moderate",
+        "color": "#ffff00"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.3039,
+          28.6812
+        ]
+      },
+      "properties": {
+        "id": "ihbas",
+        "name": "IHBAS",
+        "pm25": 92.6,
+        "aqi": 209.0,
         "category": "Poor",
-        "color": "#ff7e00"
+        "color": "#ff9900"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.2413,
+          28.6289
+        ]
+      },
+      "properties": {
+        "id": "ito",
+        "name": "ITO",
+        "pm25": 85.8,
+        "aqi": 186.0,
+        "category": "Moderate",
+        "color": "#ffff00"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.1685,
+          28.5407
+        ]
+      },
+      "properties": {
+        "id": "jnu",
+        "name": "JNU",
+        "pm25": 62.7,
+        "aqi": 109.0,
+        "category": "Moderate",
+        "color": "#ffff00"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.264,
+          28.4985
+        ]
+      },
+      "properties": {
+        "id": "karni-singh",
+        "name": "Karni Singh",
+        "pm25": 58.3,
+        "aqi": 112.0,
+        "category": "Moderate",
+        "color": "#ffff00"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.2273,
+          28.5918
+        ]
+      },
+      "properties": {
+        "id": "lodhi-road",
+        "name": "Lodhi Road",
+        "pm25": 58.4,
+        "aqi": 111.0,
+        "category": "Moderate",
+        "color": "#ffff00"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.237,
+          28.602
+        ]
+      },
+      "properties": {
+        "id": "major-dhyan-chand",
+        "name": "Dhyan Chand",
+        "pm25": 51.8,
+        "aqi": 101.0,
+        "category": "Moderate",
+        "color": "#ffff00"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.2009,
+          28.6362
+        ]
+      },
+      "properties": {
+        "id": "mandir-marg",
+        "name": "Mandir Marg",
+        "pm25": 65.7,
+        "aqi": 119.0,
+        "category": "Moderate",
+        "color": "#ffff00"
       }
     },
     {
@@ -247,62 +319,8 @@
       "properties": {
         "id": "mundka",
         "name": "Mundka",
-        "pm25": 91.6,
-        "aqi": 203.0,
-        "category": "Poor",
-        "color": "#ff7e00"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          77.1735,
-          28.7277
-        ]
-      },
-      "properties": {
-        "id": "jahangirpuri",
-        "name": "Jahangirpuri",
-        "pm25": 91.6,
-        "aqi": 203.0,
-        "category": "Poor",
-        "color": "#ff7e00"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          77.3588,
-          28.626
-        ]
-      },
-      "properties": {
-        "id": "noida-sec62",
-        "name": "Noida Sec-62",
-        "pm25": 97.1,
-        "aqi": 221.8,
-        "category": "Poor",
-        "color": "#ff7e00"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          77.323,
-          28.5449
-        ]
-      },
-      "properties": {
-        "id": "noida-sec125",
-        "name": "Noida Sec-125",
-        "pm25": 77.7,
-        "aqi": 158.0,
+        "pm25": 70.0,
+        "aqi": 153.0,
         "category": "Moderate",
         "color": "#ffff00"
       }
@@ -312,15 +330,15 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.4896,
-          28.472
+          77.131,
+          28.6736
         ]
       },
       "properties": {
-        "id": "greater-noida",
-        "name": "Greater Noida",
-        "pm25": 87.4,
-        "aqi": 191.1,
+        "id": "punjabi-bagh",
+        "name": "Punjabi Bagh",
+        "pm25": 74.6,
+        "aqi": 149.0,
         "category": "Moderate",
         "color": "#ffff00"
       }
@@ -330,33 +348,15 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.3573,
-          28.6604
+          77.1462,
+          28.6394
         ]
       },
       "properties": {
-        "id": "ghaziabad",
-        "name": "Ghaziabad",
-        "pm25": 91.6,
-        "aqi": 203.0,
-        "category": "Poor",
-        "color": "#ff7e00"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          77.1467,
-          28.4272
-        ]
-      },
-      "properties": {
-        "id": "gurugram-teri",
-        "name": "Gurugram TERI",
-        "pm25": 87.4,
-        "aqi": 191.1,
+        "id": "pusa",
+        "name": "Pusa",
+        "pm25": 57.7,
+        "aqi": 114.0,
         "category": "Moderate",
         "color": "#ffff00"
       }
@@ -366,33 +366,15 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.0614,
-          28.4292
+          77.1744,
+          28.5651
         ]
       },
       "properties": {
-        "id": "gurugram-sec51",
-        "name": "Gurugram Sec-51",
-        "pm25": 97.1,
-        "aqi": 221.8,
-        "category": "Poor",
-        "color": "#ff7e00"
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          77.3073,
-          28.4089
-        ]
-      },
-      "properties": {
-        "id": "faridabad",
-        "name": "Faridabad",
-        "pm25": 77.7,
-        "aqi": 158.0,
+        "id": "rk-puram",
+        "name": "RK Puram",
+        "pm25": 63.5,
+        "aqi": 121.0,
         "category": "Moderate",
         "color": "#ffff00"
       }
@@ -402,17 +384,17 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.0931,
-          28.8527
+          77.1568,
+          28.6512
         ]
       },
       "properties": {
-        "id": "narela",
-        "name": "Narela",
-        "pm25": 91.6,
-        "aqi": 203.0,
-        "category": "Poor",
-        "color": "#ff7e00"
+        "id": "shadipur",
+        "name": "Shadipur",
+        "pm25": 51.2,
+        "aqi": 103.0,
+        "category": "Moderate",
+        "color": "#ffff00"
       }
     },
     {
@@ -420,17 +402,17 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.0512,
-          28.7761
+          77.186,
+          28.5312
         ]
       },
       "properties": {
-        "id": "bawana",
-        "name": "Bawana",
-        "pm25": 91.6,
-        "aqi": 203.0,
-        "category": "Poor",
-        "color": "#ff7e00"
+        "id": "sri-aurobindo",
+        "name": "Aurobindo Marg",
+        "pm25": 57.6,
+        "aqi": 106.0,
+        "category": "Moderate",
+        "color": "#ffff00"
       }
     },
     {
@@ -438,17 +420,35 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          77.3156,
-          28.6726
+          77.1945,
+          28.6218
         ]
       },
       "properties": {
-        "id": "vivek-vihar",
-        "name": "Vivek Vihar",
-        "pm25": 114.5,
-        "aqi": 281.2,
-        "category": "Poor",
-        "color": "#ff7e00"
+        "id": "talkatora",
+        "name": "Talkatora",
+        "pm25": 68.3,
+        "aqi": 128.0,
+        "category": "Moderate",
+        "color": "#ffff00"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.1654,
+          28.6998
+        ]
+      },
+      "properties": {
+        "id": "wazirpur",
+        "name": "Wazirpur",
+        "pm25": 64.5,
+        "aqi": 150.0,
+        "category": "Moderate",
+        "color": "#ffff00"
       }
     }
   ]

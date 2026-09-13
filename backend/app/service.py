@@ -33,7 +33,7 @@ from backend.physics.plume_transport import PlumeTransportModel
 from backend.physics.emission_processor import EmissionProcessor
 
 from backend.ml.feature_engineering import FeatureEngineer
-from backend.ml.ensemble import EnsembleForecaster
+from backend.ml.ensemble import EnsembleForecaster, ForecastResult
 
 from backend.nlp.alert_generator import AlertGenerator
 from backend.nlp.severity_classifier import SeverityClassifier
@@ -409,8 +409,76 @@ class AQIService:
             f.station_id: f.to_dict() for f in forecasts
         }
 
-        # Spatial forecast grid overlay
-        self.state["spatial"] = self._build_spatial_geojson(forecasts)
+        # REAL-model overlay: SIH-p2 exporter output (daily TFT+XGB+LGBM,
+        # hourly-downscaled) wins over the baseline ensemble wherever it
+        # is fresh (<36h). Falls back silently when stale/missing.
+        self._apply_real_overlay()
+
+        # Spatial forecast grid overlay (from state so the real-model
+        # overlay is reflected on the map, not just the live ensemble).
+        self.state["spatial"] = self._build_spatial_geojson(
+            self.state.get("forecasts", {}))
+
+    def _load_real_overlay(self) -> Dict[str, Any]:
+        """Read exporter output (data/sample_forecasts/) with freshness gate."""
+        overlay: Dict[str, Any] = {}
+        try:
+            idx_path = DATA_DIR / "sample_forecasts" / "index.json"
+            idx = json.loads(idx_path.read_text())
+            gen = datetime.fromisoformat(str(idx.get("generated_at", "")))
+            age_h = (datetime.now(timezone.utc) - gen).total_seconds() / 3600.0
+            if age_h > 36:
+                logger.info("Real overlay stale (%.1fh) — using live ensemble", age_h)
+                return {}
+            for fname in idx.get("station_forecasts", []):
+                p = DATA_DIR / "sample_forecasts" / fname
+                try:
+                    payload = json.loads(p.read_text())
+                except Exception:
+                    continue
+                if (payload.get("source", "").startswith("sih-p2")
+                        and len(payload.get("timestamps", [])) == 72):
+                    overlay[payload["station_id"]] = payload
+            logger.info("Real overlay: %d stations (age %.1fh)",
+                        len(overlay), age_h)
+        except Exception as e:
+            logger.debug("Real overlay unavailable: %s", e)
+        return overlay
+
+    def _apply_real_overlay(self) -> None:
+        overlay = self._load_real_overlay()
+        self.state["real_overlay_n"] = len(overlay)
+        if not overlay:
+            return
+        for sid, payload in overlay.items():
+            try:
+                self.state["forecasts"][sid] = {
+                    **ForecastResult(
+                        station_id=sid,
+                        timestamps=payload["timestamps"],
+                        pm25=[float(v) for v in payload["pm25"]],
+                        pm10=[float(v) for v in payload["pm10"]],
+                        aqi=[float(v) for v in payload["aqi"]],
+                        category=list(payload["category"]),
+                        colors=list(payload["colors"]),
+                        lower=[float(v) for v in payload.get("lower", [])],
+                        upper=[float(v) for v in payload.get("upper", [])],
+                        pm10_lower=[float(v) for v in payload.get("pm10_lower", [])],
+                        pm10_upper=[float(v) for v in payload.get("pm10_upper", [])],
+                        dominant_pollutant=payload.get("daily", [{}])[0].get(
+                            "dominant_pollutant", "pm25"),
+                        models=dict(payload.get("models", {})),
+                        generated_at=payload.get("generated_at", ""),
+                    ).to_dict(),
+                    # Extras pass through to station-detail + accuracy table.
+                    "no2": payload.get("no2", []),
+                    "o3": payload.get("o3", []),
+                    "daily": payload.get("daily", []),
+                    "blend_used": payload.get("blend_used", {}),
+                    "provenance": "sih-p2 ensemble (daily model, hourly downscaled)",
+                }
+            except Exception as e:
+                logger.debug("Overlay failed for %s: %s", sid, e)
 
     async def _generate_alerts(self):
         """Generate domain advisory from the worst station."""
@@ -702,9 +770,26 @@ class AQIService:
         }
 
     def _build_spatial_geojson(self, forecasts) -> Dict:
-        """Pixel grid of interpolated PM2.5 for map heatmap overlay."""
+        """Pixel grid of interpolated PM2.5 for map heatmap overlay.
+
+        Accepts ForecastResult objects (live ensemble) or plain dicts
+        (real-model overlay in state) — attribute/dict access handled.
+        """
         stations = self.state.get("stations", [])
-        by_id = {f.station_id: f for f in forecasts}
+
+        def _get(fc, key, idx=0):
+            if fc is None:
+                return None
+            v = fc.get(key) if isinstance(fc, dict) else getattr(fc, key, None)
+            if isinstance(v, list):
+                return v[idx] if len(v) > idx else None
+            return v
+
+        by_id = {}
+        if forecasts and not isinstance(forecasts, dict):
+            by_id = {f.station_id: f for f in forecasts}
+        else:
+            by_id = dict(forecasts or {})
 
         features = []
         for station in stations:
@@ -712,7 +797,7 @@ class AQIService:
             current = station.get("current")
             value = None
             if forecast:
-                value = forecast.pm25[0]
+                value = _get(forecast, "pm25")
             elif current:
                 value = current.get("pollutants", {}).get("pm25")
             if value is None:
@@ -727,14 +812,14 @@ class AQIService:
                     "id": station["id"],
                     "name": station["short_name"],
                     "pm25": value,
-                    "aqi": (forecast.aqi[0] if forecast and forecast.aqi
-                            else (current or {}).get("aqi", 0)),
+                    "aqi": (_get(forecast, "aqi")
+                            or (current or {}).get("aqi", 0)),
                     "category": (
-                        (forecast.category[0] if forecast and forecast.category else None)
+                        _get(forecast, "category")
                         or (current or {}).get("category", "Unknown")
                     ),
                     "color": (
-                        (forecast.colors[0] if forecast and forecast.colors else None)
+                        _get(forecast, "colors")
                         or (current or {}).get("color", "#808080")
                     ),
                 },

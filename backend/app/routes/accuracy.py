@@ -27,6 +27,21 @@ def _get_service(request: Request):
     return request.app.state.service
 
 
+def _ensemble_72h_block():
+    """Real SIH-p2 72h ensemble skill (no DB needed).
+
+    Returns per-pollutant test RMSE, per-horizon backtest and AQI hit
+    rates from scripts/ensemble_skill.json (written by the exporter),
+    or None when the exporter has never run.
+    """
+    import json
+    from backend.app.config import PROJECT_ROOT
+    try:
+        return json.loads((PROJECT_ROOT / "scripts" / "ensemble_skill.json").read_text())
+    except Exception:
+        return None
+
+
 def _db_path(service) -> Path:
     from backend.app.config import PROJECT_ROOT
     return PROJECT_ROOT / service.settings.database_path
@@ -54,10 +69,13 @@ async def accuracy_summary(request: Request, include_gbm: bool = False):
     db = _db_path(service)
     if not db.exists():
         return {"available": False,
-                "reason": f"No database at {db} — run server once first."}
+                "reason": f"No database at {db} — run server once first.",
+                "ensemble_72h": _ensemble_72h_block()}
     series = load_series(str(db))
     if not series:
-        return {"available": False, "reason": "Database has no readings yet."}
+        return {"available": False,
+                "reason": "Database has no readings yet.",
+                "ensemble_72h": _ensemble_72h_block()}
 
     skill = backtest(series)
 
@@ -86,6 +104,7 @@ async def accuracy_summary(request: Request, include_gbm: bool = False):
         "buckets": {k: skill.get(k, {}) for k in ("<=1h", "1-6h", ">6h")},
         "skill_vs_persistence": scores,
         "pearson_r_baseline": skill.get("pearson_r_baseline", 0.0),
+        "ensemble_72h": _ensemble_72h_block(),
         "how_to_read": {
             "mae": "Mean absolute error µg/m³ (lower = better).",
             "rmse": "Root mean square error; penalises big misses.",
@@ -148,6 +167,11 @@ async def model_status(request: Request):
 
     training = _read_json("training_report.json")
     backfill = _read_json("backfill_report.json")
+    ensemble_72h = _read_json("ensemble_skill.json")
+    members_72h = {}
+    if ensemble_72h:
+        for row in ensemble_72h.get("per_pollutant_test", []):
+            members_72h[row["target"]] = row.get("blend")
     return {
         "members": members,
         "mode": ("baseline" if members.get("baseline")
@@ -155,6 +179,10 @@ async def model_status(request: Request):
         "db": db_info,
         "training": training,
         "backfill": backfill,
+        # Real SIH-p2 72h ensemble skill (daily TFT+XGB+LGBM, 27 stations).
+        "ensemble_72h": ensemble_72h,
+        "ensemble_72h_blends": members_72h,
+        "real_overlay_n": service.state.get("real_overlay_n", 0),
     }
 
 
@@ -234,6 +262,9 @@ async def accuracy_stations(request: Request):
                 "timestamp": cur.get("timestamp"),
             } if cur else None,
             "forecast_h24": h24,
+            "forecast_daily": fc.get("daily", []),
+            "blend_used": fc.get("blend_used", {}),
+            "provenance": fc.get("provenance", "live ensemble"),
             "last_step": last_step,
         })
     # Worst-AQI first so the table reads like a leaderboard

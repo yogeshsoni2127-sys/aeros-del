@@ -191,15 +191,17 @@ class NAQICalculator:
         if concentration < 0:
             return None
 
-        # Find the breakpoint range
-        for c_lo, c_hi, aqi_lo, aqi_hi in breakpoint_table:
-            if c_lo <= concentration <= c_hi:
-                # Linear interpolation
-                sub_index = (
-                    ((aqi_hi - aqi_lo) / max(c_hi - c_lo, 0.001))
-                    * (concentration - c_lo)
-                    + aqi_lo
-                )
+        # Find the breakpoint range. CPCB tables use integer seams
+        # (e.g. pm25 30 | 31): decimal model outputs land in the seam, so
+        # treat breakpoints as CONTINUOUS (previous bracket's high edge).
+        # 60.1 -> ~100, never a skipped pollutant or AQI 0 "Unknown".
+        table = breakpoint_table
+        for i, (c_lo, c_hi, aqi_lo, aqi_hi) in enumerate(table):
+            eff_lo_c = c_lo if i == 0 else table[i - 1][1]
+            eff_lo_a = aqi_lo if i == 0 else table[i - 1][3]
+            if eff_lo_c <= concentration <= c_hi:
+                denom = max(c_hi - eff_lo_c, 0.001)
+                sub_index = eff_lo_a + ((aqi_hi - eff_lo_a) / denom) * (concentration - eff_lo_c)
                 return round(sub_index, 1)
 
         # Beyond last breakpoint — extrapolate for Severe+ (>500)
@@ -265,9 +267,14 @@ class NAQICalculator:
         )
 
     def _get_category(self, aqi: float) -> Dict:
-        """Get AQI category info for a given AQI value."""
+        """Get AQI category info for a given AQI value.
+
+        Continuous lookup (first category whose max covers the value) so
+        decimal AQIs like 50.5 or 100.5 land correctly instead of falling
+        through integer seams to Severe+.
+        """
         for cat in self.categories:
-            if cat["min"] <= aqi <= cat["max"]:
+            if aqi <= cat["max"]:
                 return cat
         # Beyond Severe+
         return self.categories[-1]

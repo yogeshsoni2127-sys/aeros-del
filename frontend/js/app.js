@@ -235,6 +235,15 @@
         } else if (tr.lgbm?.saved) {
           lines.push(`Last train: SAVED ${Utils.esc((tr.lgbm.path || ''))}`);
         }
+        const e72 = r.ensemble_72h;
+        if (e72 && e72.per_pollutant_test) {
+          const rmse = Object.fromEntries(
+            e72.per_pollutant_test.map((x) => [x.target, x.test_rmse]));
+          lines.push(`<span class="mode-active">● 72H ENSEMBLE</span> — ` +
+            `TFT+XGB+LGBM · test RMSE PM2.5 ${rmse.pm25 ?? '—'}, PM10 ${rmse.pm10 ?? '—'}, ` +
+            `NO2 ${rmse.no2 ?? '—'}, O3 ${rmse.o3 ?? '—'}` +
+            (r.real_overlay_n ? ` · live overlay on ${r.real_overlay_n} stations` : ''));
+        }
         el.innerHTML = lines.join('<br>');
       } catch (e) {
         el.textContent = 'Model status unavailable.';
@@ -289,6 +298,23 @@
         set('accRmse', b.rmse != null ? b.rmse : '—');
         set('accSkill', skill != null ? (skill > 0 ? '+' + (skill * 100).toFixed(0) + '%' : (skill * 100).toFixed(0) + '%') : '—');
         set('accCat', b.cat_acc != null ? Math.round(b.cat_acc * 100) + '%' : '—');
+        // Real 72h ensemble skill (SIH-p2 daily TFT+XGB+LGBM) when exported.
+        const e72 = r.ensemble_72h;
+        if (note && e72 && e72.per_horizon_backtest) {
+          const h1 = e72.per_horizon_backtest.filter((x) => x.horizon_h === 1);
+          const pm = h1.find((x) => x.target === 'pm25');
+          const aq = e72.aqi_skill || {};
+          const line = document.createElement('div');
+          line.className = 'acc-note';
+          line.innerHTML =
+            `72h ensemble (TFT+XGBoost+LightGBM, 27 stns): PM2.5 Day-1 RMSE ` +
+            `${pm ? pm.rmse : '—'} µg/m³ · Day-3 ` +
+            `${(e72.per_horizon_backtest.find((x) => x.target === 'pm25' && x.horizon_h === 3) || {}).rmse ?? '—'}` +
+            ` · AQI exact ${aq.aqi_exact_acc != null ? Math.round(aq.aqi_exact_acc * 100) + '%' : '—'}` +
+            `, ±1 ${aq.aqi_within1_acc != null ? Math.round(aq.aqi_within1_acc * 100) + '%' : '—'}` +
+            ` <a href="/api/v1/accuracy/model-status" target="_blank">full skill JSON</a>`;
+          note.after(line);
+        }
         if (note) note.innerHTML =
           `${r.pairs} tested pairs · r=${r.pearson_r_baseline} · ` +
           `<a href="/api/v1/accuracy/stations" target="_blank">per-station AQI table (54)</a>`;
@@ -475,10 +501,15 @@
           .map((k) => (k === 'baseline' ? 'statistical baseline' : k));
         const histN = (station.history || []).length;
         const gaps = this.forecastChart?.gapCount || 0;
+        const daily = (forecast.daily || []).map((d) =>
+          `${d.date.slice(5)} AQI ${d.aqi} ${d.category}`).join(' · ');
+        const prov = forecast.provenance
+          ? ` · ${forecast.provenance}` : '';
         document.getElementById('modelNotes').textContent =
           `Ensemble: ${model.join(' + ') || 'statistical baseline'} · ${forecast.timestamps.length}h` +
           (histN ? ` · green = observed past ${Math.min(histN, 24)} readings` : '') +
-          (gaps ? ` · ⚠ ${gaps} data gap${gaps > 1 ? 's' : ''} in history` : '');
+          (gaps ? ` · ⚠ ${gaps} data gap${gaps > 1 ? 's' : ''} in history` : '') +
+          (daily ? ` · Daily model: ${daily}` : '') + prov;
       }
 
       // Keep map in sync with selected station

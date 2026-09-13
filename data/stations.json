@@ -1,312 +1,12 @@
 {
   "metadata": {
-    "region": "Delhi NCR",
-    "source": "CPCB / OpenAQ",
+    "region": "Delhi (DPCC/CPCB/IMD network)",
+    "source": "SIH-p2 ensemble + OpenAQ",
     "coordinate_system": "WGS84",
-    "station_count": 54,
-    "last_updated": "2026-09-12"
+    "station_count": 25,
+    "last_updated": "2026-09-13"
   },
   "stations": [
-    {
-      "id": "anand-vihar",
-      "name": "Anand Vihar, Delhi - DPCC",
-      "short_name": "Anand Vihar",
-      "latitude": 28.6469,
-      "longitude": 77.3164,
-      "city": "Delhi",
-      "zone": "East Delhi",
-      "type": "Residential",
-      "elevation_m": 214,
-      "openaq_location_id": null
-    },
-    {
-      "id": "punjabi-bagh",
-      "name": "Punjabi Bagh, Delhi - DPCC",
-      "short_name": "Punjabi Bagh",
-      "latitude": 28.6736,
-      "longitude": 77.1310,
-      "city": "Delhi",
-      "zone": "West Delhi",
-      "type": "Residential",
-      "elevation_m": 217,
-      "openaq_location_id": null
-    },
-    {
-      "id": "rk-puram",
-      "name": "RK Puram, Delhi - DPCC",
-      "short_name": "RK Puram",
-      "latitude": 28.5651,
-      "longitude": 77.1744,
-      "city": "Delhi",
-      "zone": "South Delhi",
-      "type": "Residential",
-      "elevation_m": 212,
-      "openaq_location_id": null
-    },
-    {
-      "id": "ito",
-      "name": "ITO, Delhi - CPCB",
-      "short_name": "ITO",
-      "latitude": 28.6289,
-      "longitude": 77.2413,
-      "city": "Delhi",
-      "zone": "Central Delhi",
-      "type": "Industrial",
-      "elevation_m": 213,
-      "openaq_location_id": null
-    },
-    {
-      "id": "dtu",
-      "name": "DTU, Delhi - CPCB",
-      "short_name": "DTU",
-      "latitude": 28.7500,
-      "longitude": 77.1111,
-      "city": "Delhi",
-      "zone": "North Delhi",
-      "type": "Residential",
-      "elevation_m": 218,
-      "openaq_location_id": null
-    },
-    {
-      "id": "mandir-marg",
-      "name": "Mandir Marg, Delhi - DPCC",
-      "short_name": "Mandir Marg",
-      "latitude": 28.6362,
-      "longitude": 77.2009,
-      "city": "Delhi",
-      "zone": "Central Delhi",
-      "type": "Residential",
-      "elevation_m": 216,
-      "openaq_location_id": null
-    },
-    {
-      "id": "patparganj",
-      "name": "Patparganj, Delhi - DPCC",
-      "short_name": "Patparganj",
-      "latitude": 28.6237,
-      "longitude": 77.2870,
-      "city": "Delhi",
-      "zone": "East Delhi",
-      "type": "Industrial",
-      "elevation_m": 211,
-      "openaq_location_id": null
-    },
-    {
-      "id": "nehru-nagar",
-      "name": "Nehru Nagar, Delhi - DPCC",
-      "short_name": "Nehru Nagar",
-      "latitude": 28.5690,
-      "longitude": 77.2510,
-      "city": "Delhi",
-      "zone": "South Delhi",
-      "type": "Residential",
-      "elevation_m": 210,
-      "openaq_location_id": null
-    },
-    {
-      "id": "okhla",
-      "name": "Okhla Phase-2, Delhi - DPCC",
-      "short_name": "Okhla",
-      "latitude": 28.5309,
-      "longitude": 77.2710,
-      "city": "Delhi",
-      "zone": "South Delhi",
-      "type": "Industrial",
-      "elevation_m": 209,
-      "openaq_location_id": null
-    },
-    {
-      "id": "sirifort",
-      "name": "Siri Fort, Delhi - CPCB",
-      "short_name": "Siri Fort",
-      "latitude": 28.5504,
-      "longitude": 77.2158,
-      "city": "Delhi",
-      "zone": "South Delhi",
-      "type": "Residential",
-      "elevation_m": 214,
-      "openaq_location_id": null
-    },
-    {
-      "id": "wazirpur",
-      "name": "Wazirpur, Delhi - DPCC",
-      "short_name": "Wazirpur",
-      "latitude": 28.6998,
-      "longitude": 77.1654,
-      "city": "Delhi",
-      "zone": "North West Delhi",
-      "type": "Industrial",
-      "elevation_m": 220,
-      "openaq_location_id": null
-    },
-    {
-      "id": "rohini",
-      "name": "Rohini, Delhi - DPCC",
-      "short_name": "Rohini",
-      "latitude": 28.7332,
-      "longitude": 77.0558,
-      "city": "Delhi",
-      "zone": "North West Delhi",
-      "type": "Residential",
-      "elevation_m": 219,
-      "openaq_location_id": null
-    },
-    {
-      "id": "dwarka-sec8",
-      "name": "Dwarka Sector-8, Delhi - DPCC",
-      "short_name": "Dwarka",
-      "latitude": 28.5712,
-      "longitude": 77.0713,
-      "city": "Delhi",
-      "zone": "South West Delhi",
-      "type": "Residential",
-      "elevation_m": 215,
-      "openaq_location_id": null
-    },
-    {
-      "id": "mundka",
-      "name": "Mundka, Delhi - DPCC",
-      "short_name": "Mundka",
-      "latitude": 28.6831,
-      "longitude": 77.0284,
-      "city": "Delhi",
-      "zone": "West Delhi",
-      "type": "Industrial",
-      "elevation_m": 218,
-      "openaq_location_id": null
-    },
-    {
-      "id": "jahangirpuri",
-      "name": "Jahangirpuri, Delhi - DPCC",
-      "short_name": "Jahangirpuri",
-      "latitude": 28.7277,
-      "longitude": 77.1735,
-      "city": "Delhi",
-      "zone": "North Delhi",
-      "type": "Residential",
-      "elevation_m": 221,
-      "openaq_location_id": null
-    },
-    {
-      "id": "noida-sec62",
-      "name": "Sector-62, Noida - UPPCB",
-      "short_name": "Noida Sec-62",
-      "latitude": 28.6260,
-      "longitude": 77.3588,
-      "city": "Noida",
-      "zone": "Noida",
-      "type": "Residential",
-      "elevation_m": 200,
-      "openaq_location_id": null
-    },
-    {
-      "id": "noida-sec125",
-      "name": "Sector-125, Noida - UPPCB",
-      "short_name": "Noida Sec-125",
-      "latitude": 28.5449,
-      "longitude": 77.3230,
-      "city": "Noida",
-      "zone": "Noida",
-      "type": "Residential",
-      "elevation_m": 198,
-      "openaq_location_id": null
-    },
-    {
-      "id": "greater-noida",
-      "name": "Knowledge Park-III, Greater Noida - UPPCB",
-      "short_name": "Greater Noida",
-      "latitude": 28.4720,
-      "longitude": 77.4896,
-      "city": "Greater Noida",
-      "zone": "Greater Noida",
-      "type": "Residential",
-      "elevation_m": 195,
-      "openaq_location_id": null
-    },
-    {
-      "id": "ghaziabad",
-      "name": "Vasundhara, Ghaziabad - UPPCB",
-      "short_name": "Ghaziabad",
-      "latitude": 28.6604,
-      "longitude": 77.3573,
-      "city": "Ghaziabad",
-      "zone": "Ghaziabad",
-      "type": "Residential",
-      "elevation_m": 205,
-      "openaq_location_id": null
-    },
-    {
-      "id": "gurugram-teri",
-      "name": "TERI Gram, Gurugram - HSPCB",
-      "short_name": "Gurugram TERI",
-      "latitude": 28.4272,
-      "longitude": 77.1467,
-      "city": "Gurugram",
-      "zone": "Gurugram",
-      "type": "Residential",
-      "elevation_m": 225,
-      "openaq_location_id": null
-    },
-    {
-      "id": "gurugram-sec51",
-      "name": "Sector-51, Gurugram - HSPCB",
-      "short_name": "Gurugram Sec-51",
-      "latitude": 28.4292,
-      "longitude": 77.0614,
-      "city": "Gurugram",
-      "zone": "Gurugram",
-      "type": "Residential",
-      "elevation_m": 228,
-      "openaq_location_id": null
-    },
-    {
-      "id": "faridabad",
-      "name": "Sector-16A, Faridabad - HSPCB",
-      "short_name": "Faridabad",
-      "latitude": 28.4089,
-      "longitude": 77.3073,
-      "city": "Faridabad",
-      "zone": "Faridabad",
-      "type": "Industrial",
-      "elevation_m": 198,
-      "openaq_location_id": null
-    },
-    {
-      "id": "narela",
-      "name": "Narela, Delhi - DPCC",
-      "short_name": "Narela",
-      "latitude": 28.8527,
-      "longitude": 77.0931,
-      "city": "Delhi",
-      "zone": "North Delhi",
-      "type": "Industrial",
-      "elevation_m": 224,
-      "openaq_location_id": null
-    },
-    {
-      "id": "bawana",
-      "name": "Bawana, Delhi - DPCC",
-      "short_name": "Bawana",
-      "latitude": 28.7761,
-      "longitude": 77.0512,
-      "city": "Delhi",
-      "zone": "North Delhi",
-      "type": "Industrial",
-      "elevation_m": 222,
-      "openaq_location_id": null
-    },
-    {
-      "id": "vivek-vihar",
-      "name": "Vivek Vihar, Delhi - DPCC",
-      "short_name": "Vivek Vihar",
-      "latitude": 28.6726,
-      "longitude": 77.3156,
-      "city": "Delhi",
-      "zone": "East Delhi",
-      "type": "Residential",
-      "elevation_m": 212,
-      "openaq_location_id": null
-    },
     {
       "id": "alipur",
       "name": "Alipur, Delhi - DPCC",
@@ -317,7 +17,27 @@
       "zone": "North Delhi",
       "type": "Industrial",
       "elevation_m": 220,
-      "openaq_location_id": null
+      "openaq_location_id": 6932,
+      "openaq_location_ids": [
+        6932
+      ]
+    },
+    {
+      "id": "anand-vihar",
+      "name": "Anand Vihar, Delhi - DPCC",
+      "short_name": "Anand Vihar",
+      "latitude": 28.6469,
+      "longitude": 77.3164,
+      "city": "Delhi",
+      "zone": "East Delhi",
+      "type": "Residential",
+      "elevation_m": 214,
+      "openaq_location_id": 5509,
+      "openaq_location_ids": [
+        5509,
+        10487,
+        235
+      ]
     },
     {
       "id": "ashok-vihar",
@@ -329,7 +49,11 @@
       "zone": "North West Delhi",
       "type": "Residential",
       "elevation_m": 219,
-      "openaq_location_id": null
+      "openaq_location_id": 5762,
+      "openaq_location_ids": [
+        5762,
+        8917
+      ]
     },
     {
       "id": "aya-nagar",
@@ -341,7 +65,10 @@
       "zone": "South Delhi",
       "type": "Residential",
       "elevation_m": 230,
-      "openaq_location_id": null
+      "openaq_location_id": 5570,
+      "openaq_location_ids": [
+        5570
+      ]
     },
     {
       "id": "burari",
@@ -353,7 +80,40 @@
       "zone": "North Delhi",
       "type": "Residential",
       "elevation_m": 220,
-      "openaq_location_id": null
+      "openaq_location_id": 5541,
+      "openaq_location_ids": [
+        5541
+      ]
+    },
+    {
+      "id": "cantonment",
+      "name": "Cantonment Area, Delhi - DPCC",
+      "short_name": "Cantonment",
+      "latitude": 28.5942,
+      "longitude": 77.1251,
+      "city": "Delhi",
+      "zone": "South West Delhi",
+      "type": "Residential",
+      "elevation_m": 215,
+      "openaq_location_id": 6257818,
+      "openaq_location_ids": [
+        6257818
+      ]
+    },
+    {
+      "id": "commonwealth",
+      "name": "Commonwealth Sports Complex, Delhi - DPCC",
+      "short_name": "Commonwealth",
+      "latitude": 28.6158,
+      "longitude": 77.272,
+      "city": "Delhi",
+      "zone": "East Delhi",
+      "type": "Residential",
+      "elevation_m": 215,
+      "openaq_location_id": 6254665,
+      "openaq_location_ids": [
+        6254665
+      ]
     },
     {
       "id": "crri-mathura",
@@ -365,31 +125,40 @@
       "zone": "South Delhi",
       "type": "Transport",
       "elevation_m": 210,
-      "openaq_location_id": null
+      "openaq_location_id": 5627,
+      "openaq_location_ids": [
+        5627
+      ]
     },
     {
-      "id": "chandni-chowk",
-      "name": "Chandni Chowk, Delhi - IITM",
-      "short_name": "Chandni Chowk",
-      "latitude": 28.6568,
-      "longitude": 77.231,
-      "city": "Delhi",
-      "zone": "Central Delhi",
-      "type": "Commercial",
-      "elevation_m": 213,
-      "openaq_location_id": null
-    },
-    {
-      "id": "igi-airport",
-      "name": "IGI Airport T3, Delhi - IMD",
-      "short_name": "IGI Airport",
-      "latitude": 28.5562,
-      "longitude": 77.1,
+      "id": "dwarka-sec8",
+      "name": "Dwarka Sector-8, Delhi - DPCC",
+      "short_name": "Dwarka",
+      "latitude": 28.5712,
+      "longitude": 77.0713,
       "city": "Delhi",
       "zone": "South West Delhi",
-      "type": "Transport",
-      "elevation_m": 220,
-      "openaq_location_id": null
+      "type": "Residential",
+      "elevation_m": 215,
+      "openaq_location_id": 6931,
+      "openaq_location_ids": [
+        6931
+      ]
+    },
+    {
+      "id": "ignou",
+      "name": "IGNOU Maidan Garhi, Delhi - DPCC",
+      "short_name": "IGNOU",
+      "latitude": 28.4936,
+      "longitude": 77.2012,
+      "city": "Delhi",
+      "zone": "South Delhi",
+      "type": "Residential",
+      "elevation_m": 215,
+      "openaq_location_id": 6254666,
+      "openaq_location_ids": [
+        6254666
+      ]
     },
     {
       "id": "ihbas",
@@ -401,151 +170,40 @@
       "zone": "East Delhi",
       "type": "Residential",
       "elevation_m": 211,
-      "openaq_location_id": null
+      "openaq_location_id": 6359,
+      "openaq_location_ids": [
+        6359
+      ]
     },
     {
-      "id": "jln-stadium",
-      "name": "JLN Stadium, Delhi - SAI",
-      "short_name": "JLN Stadium",
-      "latitude": 28.5828,
-      "longitude": 77.234,
-      "city": "New Delhi",
-      "zone": "Central Delhi",
-      "type": "Residential",
-      "elevation_m": 212,
-      "openaq_location_id": null
-    },
-    {
-      "id": "janakpuri",
-      "name": "Janakpuri, Delhi - DPCC",
-      "short_name": "Janakpuri",
-      "latitude": 28.6219,
-      "longitude": 77.0878,
+      "id": "ito",
+      "name": "ITO, Delhi - CPCB",
+      "short_name": "ITO",
+      "latitude": 28.6289,
+      "longitude": 77.2413,
       "city": "Delhi",
-      "zone": "West Delhi",
-      "type": "Residential",
-      "elevation_m": 216,
-      "openaq_location_id": null
-    },
-    {
-      "id": "lodhi-road",
-      "name": "Lodhi Road, Delhi - IMD",
-      "short_name": "Lodhi Road",
-      "latitude": 28.5918,
-      "longitude": 77.2273,
-      "city": "New Delhi",
-      "zone": "South Delhi",
-      "type": "Residential",
-      "elevation_m": 212,
-      "openaq_location_id": null
-    },
-    {
-      "id": "major-dhyan-chand",
-      "name": "Major Dhyan Chand Stadium, Delhi - SAI",
-      "short_name": "Dhyan Chand",
-      "latitude": 28.602,
-      "longitude": 77.237,
-      "city": "New Delhi",
       "zone": "Central Delhi",
-      "type": "Residential",
+      "type": "Industrial",
       "elevation_m": 213,
-      "openaq_location_id": null
+      "openaq_location_id": 10489,
+      "openaq_location_ids": [
+        10489
+      ]
     },
     {
-      "id": "najafgarh",
-      "name": "Najafgarh, Delhi - DPCC",
-      "short_name": "Najafgarh",
-      "latitude": 28.6094,
-      "longitude": 76.9797,
-      "city": "Delhi",
-      "zone": "South West Delhi",
-      "type": "Residential",
-      "elevation_m": 214,
-      "openaq_location_id": null
-    },
-    {
-      "id": "north-campus",
-      "name": "North Campus DU, Delhi - IMD",
-      "short_name": "North Campus",
-      "latitude": 28.688,
-      "longitude": 77.209,
-      "city": "Delhi",
-      "zone": "North Delhi",
-      "type": "Residential",
-      "elevation_m": 218,
-      "openaq_location_id": null
-    },
-    {
-      "id": "pusa",
-      "name": "Pusa, Delhi - IMD",
-      "short_name": "Pusa",
-      "latitude": 28.6394,
-      "longitude": 77.1462,
-      "city": "New Delhi",
-      "zone": "Central Delhi",
-      "type": "Residential",
-      "elevation_m": 215,
-      "openaq_location_id": null
-    },
-    {
-      "id": "shadipur",
-      "name": "Shadipur, Delhi - CPCB",
-      "short_name": "Shadipur",
-      "latitude": 28.6512,
-      "longitude": 77.1568,
-      "city": "Delhi",
-      "zone": "West Delhi",
-      "type": "Commercial",
-      "elevation_m": 216,
-      "openaq_location_id": null
-    },
-    {
-      "id": "sonia-vihar",
-      "name": "Sonia Vihar, Delhi - DPCC",
-      "short_name": "Sonia Vihar",
-      "latitude": 28.7374,
-      "longitude": 77.249,
-      "city": "Delhi",
-      "zone": "North East Delhi",
-      "type": "Residential",
-      "elevation_m": 212,
-      "openaq_location_id": null
-    },
-    {
-      "id": "sri-aurobindo",
-      "name": "Sri Aurobindo Marg, Delhi - DPCC",
-      "short_name": "Aurobindo Marg",
-      "latitude": 28.5312,
-      "longitude": 77.186,
+      "id": "jnu",
+      "name": "JNU, Delhi - DPCC",
+      "short_name": "JNU",
+      "latitude": 28.5407,
+      "longitude": 77.1685,
       "city": "Delhi",
       "zone": "South Delhi",
       "type": "Residential",
-      "elevation_m": 213,
-      "openaq_location_id": null
-    },
-    {
-      "id": "nsit-dwarka",
-      "name": "NSIT Dwarka, Delhi - CPCB",
-      "short_name": "NSIT Dwarka",
-      "latitude": 28.6098,
-      "longitude": 77.032,
-      "city": "Delhi",
-      "zone": "South West Delhi",
-      "type": "Residential",
       "elevation_m": 215,
-      "openaq_location_id": null
-    },
-    {
-      "id": "east-arjun-nagar",
-      "name": "East Arjun Nagar, Delhi - CPCB",
-      "short_name": "Arjun Nagar",
-      "latitude": 28.655,
-      "longitude": 77.296,
-      "city": "Delhi",
-      "zone": "East Delhi",
-      "type": "Residential",
-      "elevation_m": 211,
-      "openaq_location_id": null
+      "openaq_location_id": 6254663,
+      "openaq_location_ids": [
+        6254663
+      ]
     },
     {
       "id": "karni-singh",
@@ -557,103 +215,183 @@
       "zone": "South Delhi",
       "type": "Residential",
       "elevation_m": 210,
-      "openaq_location_id": null
+      "openaq_location_id": 5744,
+      "openaq_location_ids": [
+        5744,
+        6934
+      ]
     },
     {
-      "id": "loni",
-      "name": "Loni, Ghaziabad - UPPCB",
-      "short_name": "Loni",
-      "latitude": 28.751,
-      "longitude": 77.289,
-      "city": "Ghaziabad",
-      "zone": "Ghaziabad",
-      "type": "Industrial",
-      "elevation_m": 205,
-      "openaq_location_id": null
-    },
-    {
-      "id": "indirapuram",
-      "name": "Indirapuram, Ghaziabad - UPPCB",
-      "short_name": "Indirapuram",
-      "latitude": 28.6417,
-      "longitude": 77.371,
-      "city": "Ghaziabad",
-      "zone": "Ghaziabad",
+      "id": "lodhi-road",
+      "name": "Lodhi Road, Delhi - IMD",
+      "short_name": "Lodhi Road",
+      "latitude": 28.5918,
+      "longitude": 77.2273,
+      "city": "New Delhi",
+      "zone": "South Delhi",
       "type": "Residential",
-      "elevation_m": 203,
-      "openaq_location_id": null
+      "elevation_m": 212,
+      "openaq_location_id": 5634,
+      "openaq_location_ids": [
+        5634
+      ]
     },
     {
-      "id": "noida-sec1",
-      "name": "Sector-1, Noida - UPPCB",
-      "short_name": "Noida Sec-1",
-      "latitude": 28.578,
-      "longitude": 77.313,
-      "city": "Noida",
-      "zone": "Noida",
-      "type": "Industrial",
-      "elevation_m": 200,
-      "openaq_location_id": null
-    },
-    {
-      "id": "gurugram-vikas",
-      "name": "Vikas Sadan, Gurugram - HSPCB",
-      "short_name": "Gurugram Vikas",
-      "latitude": 28.4595,
-      "longitude": 77.0266,
-      "city": "Gurugram",
-      "zone": "Gurugram",
+      "id": "major-dhyan-chand",
+      "name": "Major Dhyan Chand Stadium, Delhi - SAI",
+      "short_name": "Dhyan Chand",
+      "latitude": 28.602,
+      "longitude": 77.237,
+      "city": "New Delhi",
+      "zone": "Central Delhi",
       "type": "Residential",
-      "elevation_m": 228,
-      "openaq_location_id": null
+      "elevation_m": 213,
+      "openaq_location_id": 5755,
+      "openaq_location_ids": [
+        5755,
+        6929
+      ]
     },
     {
-      "id": "faridabad-nit",
-      "name": "New Industrial Town, Faridabad - HSPCB",
-      "short_name": "Faridabad NIT",
-      "latitude": 28.38,
-      "longitude": 77.3,
-      "city": "Faridabad",
-      "zone": "Faridabad",
-      "type": "Industrial",
-      "elevation_m": 198,
-      "openaq_location_id": null
-    },
-    {
-      "id": "bahadurgarh",
-      "name": "Bahadurgarh, Haryana - HSPCB",
-      "short_name": "Bahadurgarh",
-      "latitude": 28.692,
-      "longitude": 76.935,
-      "city": "Bahadurgarh",
-      "zone": "Jhajjar",
+      "id": "mandir-marg",
+      "name": "Mandir Marg, Delhi - DPCC",
+      "short_name": "Mandir Marg",
+      "latitude": 28.6362,
+      "longitude": 77.2009,
+      "city": "Delhi",
+      "zone": "Central Delhi",
       "type": "Residential",
+      "elevation_m": 216,
+      "openaq_location_id": 5641,
+      "openaq_location_ids": [
+        5641,
+        6358
+      ]
+    },
+    {
+      "id": "mundka",
+      "name": "Mundka, Delhi - DPCC",
+      "short_name": "Mundka",
+      "latitude": 28.6831,
+      "longitude": 77.0284,
+      "city": "Delhi",
+      "zone": "West Delhi",
+      "type": "Industrial",
       "elevation_m": 218,
-      "openaq_location_id": null
+      "openaq_location_id": 10486,
+      "openaq_location_ids": [
+        10486
+      ]
     },
     {
-      "id": "dharuhera",
-      "name": "Dharuhera, Haryana - HSPCB",
-      "short_name": "Dharuhera",
-      "latitude": 28.22,
-      "longitude": 76.78,
-      "city": "Dharuhera",
-      "zone": "Rewari",
-      "type": "Industrial",
-      "elevation_m": 230,
-      "openaq_location_id": null
+      "id": "punjabi-bagh",
+      "name": "Punjabi Bagh, Delhi - DPCC",
+      "short_name": "Punjabi Bagh",
+      "latitude": 28.6736,
+      "longitude": 77.131,
+      "city": "Delhi",
+      "zone": "West Delhi",
+      "type": "Residential",
+      "elevation_m": 217,
+      "openaq_location_id": 50,
+      "openaq_location_ids": [
+        50,
+        5540,
+        6357
+      ]
     },
     {
-      "id": "ballabhgarh",
-      "name": "Ballabhgarh, Faridabad - HSPCB",
-      "short_name": "Ballabhgarh",
-      "latitude": 28.34,
-      "longitude": 77.32,
-      "city": "Faridabad",
-      "zone": "Faridabad",
+      "id": "pusa",
+      "name": "Pusa, Delhi - IMD",
+      "short_name": "Pusa",
+      "latitude": 28.6394,
+      "longitude": 77.1462,
+      "city": "New Delhi",
+      "zone": "Central Delhi",
+      "type": "Residential",
+      "elevation_m": 215,
+      "openaq_location_id": 6356,
+      "openaq_location_ids": [
+        6356,
+        5404
+      ]
+    },
+    {
+      "id": "rk-puram",
+      "name": "RK Puram, Delhi - DPCC",
+      "short_name": "RK Puram",
+      "latitude": 28.5651,
+      "longitude": 77.1744,
+      "city": "Delhi",
+      "zone": "South Delhi",
+      "type": "Residential",
+      "elevation_m": 212,
+      "openaq_location_id": 17,
+      "openaq_location_ids": [
+        17,
+        7044
+      ]
+    },
+    {
+      "id": "shadipur",
+      "name": "Shadipur, Delhi - CPCB",
+      "short_name": "Shadipur",
+      "latitude": 28.6512,
+      "longitude": 77.1568,
+      "city": "Delhi",
+      "zone": "West Delhi",
+      "type": "Commercial",
+      "elevation_m": 216,
+      "openaq_location_id": 2503,
+      "openaq_location_ids": [
+        2503,
+        5630
+      ]
+    },
+    {
+      "id": "sri-aurobindo",
+      "name": "Sri Aurobindo Marg, Delhi - DPCC",
+      "short_name": "Aurobindo Marg",
+      "latitude": 28.5312,
+      "longitude": 77.186,
+      "city": "Delhi",
+      "zone": "South Delhi",
+      "type": "Residential",
+      "elevation_m": 213,
+      "openaq_location_id": 10484,
+      "openaq_location_ids": [
+        10484
+      ]
+    },
+    {
+      "id": "talkatora",
+      "name": "Talkatora Garden, Delhi - DPCC",
+      "short_name": "Talkatora",
+      "latitude": 28.6218,
+      "longitude": 77.1945,
+      "city": "Delhi",
+      "zone": "Central Delhi",
+      "type": "Residential",
+      "elevation_m": 215,
+      "openaq_location_id": 6254594,
+      "openaq_location_ids": [
+        6254594
+      ]
+    },
+    {
+      "id": "wazirpur",
+      "name": "Wazirpur, Delhi - DPCC",
+      "short_name": "Wazirpur",
+      "latitude": 28.6998,
+      "longitude": 77.1654,
+      "city": "Delhi",
+      "zone": "North West Delhi",
       "type": "Industrial",
-      "elevation_m": 198,
-      "openaq_location_id": null
+      "elevation_m": 220,
+      "openaq_location_id": 8915,
+      "openaq_location_ids": [
+        8915
+      ]
     }
   ]
 }

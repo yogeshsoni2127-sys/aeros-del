@@ -1,0 +1,209 @@
+{
+  "generated_at": "2026-09-13T19:59:52.189164+00:00",
+  "source_forecast": "forecast_aqi_72h_d84bdae5.csv",
+  "models": {
+    "tft": "Temporal Fusion Transformer (pytorch-forecasting)",
+    "xgboost": "XGBRegressor per pollutant",
+    "lightgbm": "LGBMRegressor per pollutant",
+    "note": "per-pollutant val-selected blend; NO uses LightGBM only"
+  },
+  "per_pollutant_test": [
+    {
+      "target": "pm25",
+      "blend": "tft=0.34, xgb=0.33, lgbm=0.33",
+      "test_rmse": 14.3,
+      "test_mae": 9.1
+    },
+    {
+      "target": "pm10",
+      "blend": "tft=0.5, xgb=0.3, lgbm=0.2",
+      "test_rmse": 47.04,
+      "test_mae": 27.96
+    },
+    {
+      "target": "no2",
+      "blend": "tft=0.2, xgb=0.5, lgbm=0.3",
+      "test_rmse": 7.56,
+      "test_mae": 5.18
+    },
+    {
+      "target": "o3",
+      "blend": "tft=0.34, xgb=0.33, lgbm=0.33",
+      "test_rmse": 9.16,
+      "test_mae": 6.29
+    },
+    {
+      "target": "no",
+      "blend": "LGBM only",
+      "test_rmse": 7.85,
+      "test_mae": 4.68
+    },
+    {
+      "target": "nox",
+      "blend": "tft=0.2, xgb=0.5, lgbm=0.3",
+      "test_rmse": 12.4,
+      "test_mae": 8.22
+    }
+  ],
+  "per_horizon_backtest": [
+    {
+      "target": "no",
+      "horizon_h": 1,
+      "n": 914,
+      "rmse": 8.54,
+      "mae": 5.43,
+      "r2": 0.428
+    },
+    {
+      "target": "no",
+      "horizon_h": 2,
+      "n": 914,
+      "rmse": 8.95,
+      "mae": 6.27,
+      "r2": 0.384
+    },
+    {
+      "target": "no",
+      "horizon_h": 3,
+      "n": 914,
+      "rmse": 8.94,
+      "mae": 6.36,
+      "r2": 0.384
+    },
+    {
+      "target": "no2",
+      "horizon_h": 1,
+      "n": 954,
+      "rmse": 7.04,
+      "mae": 5.02,
+      "r2": 0.744
+    },
+    {
+      "target": "no2",
+      "horizon_h": 2,
+      "n": 954,
+      "rmse": 7.68,
+      "mae": 5.59,
+      "r2": 0.693
+    },
+    {
+      "target": "no2",
+      "horizon_h": 3,
+      "n": 954,
+      "rmse": 7.67,
+      "mae": 5.56,
+      "r2": 0.695
+    },
+    {
+      "target": "nox",
+      "horizon_h": 1,
+      "n": 914,
+      "rmse": 12.15,
+      "mae": 9.14,
+      "r2": 0.633
+    },
+    {
+      "target": "nox",
+      "horizon_h": 2,
+      "n": 914,
+      "rmse": 11.48,
+      "mae": 8.22,
+      "r2": 0.672
+    },
+    {
+      "target": "nox",
+      "horizon_h": 3,
+      "n": 914,
+      "rmse": 11.65,
+      "mae": 8.54,
+      "r2": 0.663
+    },
+    {
+      "target": "o3",
+      "horizon_h": 1,
+      "n": 954,
+      "rmse": 10.04,
+      "mae": 8.08,
+      "r2": 0.24
+    },
+    {
+      "target": "o3",
+      "horizon_h": 2,
+      "n": 954,
+      "rmse": 9.13,
+      "mae": 6.75,
+      "r2": 0.381
+    },
+    {
+      "target": "o3",
+      "horizon_h": 3,
+      "n": 954,
+      "rmse": 9.14,
+      "mae": 6.72,
+      "r2": 0.382
+    },
+    {
+      "target": "pm10",
+      "horizon_h": 1,
+      "n": 994,
+      "rmse": 32.76,
+      "mae": 21.35,
+      "r2": 0.683
+    },
+    {
+      "target": "pm10",
+      "horizon_h": 2,
+      "n": 994,
+      "rmse": 33.29,
+      "mae": 21.61,
+      "r2": 0.676
+    },
+    {
+      "target": "pm10",
+      "horizon_h": 3,
+      "n": 994,
+      "rmse": 34.73,
+      "mae": 23.01,
+      "r2": 0.648
+    },
+    {
+      "target": "pm25",
+      "horizon_h": 1,
+      "n": 994,
+      "rmse": 14.31,
+      "mae": 9.94,
+      "r2": 0.45
+    },
+    {
+      "target": "pm25",
+      "horizon_h": 2,
+      "n": 994,
+      "rmse": 13.51,
+      "mae": 9.07,
+      "r2": 0.509
+    },
+    {
+      "target": "pm25",
+      "horizon_h": 3,
+      "n": 994,
+      "rmse": 13.9,
+      "mae": 9.46,
+      "r2": 0.488
+    }
+  ],
+  "aqi_skill": {
+    "aqi_exact_acc": 0.6667,
+    "aqi_within1_acc": 0.9933,
+    "severe_recall": 0.3333,
+    "severe_n": 27,
+    "n": 2982,
+    "source": "backtest_FINAL.csv 40-origin rolling backtest with real XGB/LGBM+TFT-h1, Day-1 blend + shrunk calibration",
+    "run": "2026-09-14",
+    "note": "AQI recomputed with seam-fixed continuous CPCB breakpoints"
+  },
+  "how_to_read": {
+    "rmse": "ug/m3, lower is better; horizons degrade ~15-25% (h2) / ~30-50% (h3)",
+    "r2": "1 = perfect; NO/PM2.5 weakest (traffic/dust features missing)",
+    "aqi_exact": "fraction with predicted AQI category == actual"
+  }
+}
