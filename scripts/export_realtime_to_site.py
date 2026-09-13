@@ -92,16 +92,60 @@ NEW_STATIONS = {
     "talkatora": ("Talkatora Garden, Delhi - DPCC", "Talkatora", "Central Delhi", "Residential"),
 }
 
-# Diurnal shape: (amplitude, peak_hour). Normalised to mean 1 at runtime.
+# Diurnal shape: (base amplitude, peak hour IST). Amplitude is scaled
+# per station by that station's observed day-to-day variability
+# (CoV from training data, clamped) -- spike-prone stations get peakier
+# days, stable stations flatter ones. Phase stays fixed: daily data
+# carries no hour-of-day information and inventing phases would be fake.
 DIURNAL = {"pm25": (0.35, 1), "pm10": (0.30, 1), "no2": (0.40, 9),
            "o3": (0.50, 15), "no": (0.40, 9), "nox": (0.40, 9)}
 
+IST_SUFFIX = "+05:30"  # Asia/Kolkata has no DST; daily dates are IST days.
 
-def diurnal_weights(pollutant: str) -> list:
+
+def station_cov() -> dict:
+    """Per-(station, pollutant) coefficient of variation from training data.
+
+    Falls back to 1.0 (template amplitude) when the training CSV is absent
+    (e.g. exporter run from a bare site checkout).
+    """
+    try:
+        tr = pd.read_csv(REPO_ROOT / "data" / "processed" / "delhi_final_training_data.csv",
+                         usecols=["location_name"] + TARGETS)
+    except Exception:
+        return {}
+    out: dict = {}
+    for p in TARGETS:
+        med = tr.groupby("location_name")[p].agg(["mean", "std"])
+        cov = (med["std"] / med["mean"]).replace([float("inf")], float("nan"))
+        global_cov = float(cov.median())
+        for station, c in cov.items():
+            scale = 1.0 if pd.isna(c) or not global_cov else float(c) / global_cov
+            out[(station, p)] = min(1.4, max(0.7, scale))
+    return out
+
+
+def diurnal_weights(pollutant: str, amp_scale: float = 1.0) -> list:
     amp, peak = DIURNAL[pollutant]
+    amp *= amp_scale
     w = [1.0 + amp * math.cos((h - peak) * math.pi / 12.0) for h in range(24)]
     m = sum(w) / 24.0
     return [x / m for x in w]
+
+
+def smooth_junctions(hourly72: list) -> list:
+    """Blend the 23:00->00:00 day-boundary pairs so consecutive days with
+    different means join continuously instead of stepping."""
+    out = list(hourly72)
+    for j in (23, 47):
+        a, b = out[j], out[j + 1]
+        out[j], out[j + 1] = 0.75 * a + 0.25 * b, 0.25 * a + 0.75 * b
+    return out
+
+
+def rescale_day(seg: list, target_mean: float) -> list:
+    m = sum(seg) / len(seg)
+    return [x * target_mean / m for x in seg] if m else list(seg)
 
 
 def parse_blend(label: str) -> dict:
@@ -172,34 +216,60 @@ def main() -> None:
         sys.exit(0 if not problems else 1)
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    W = {p: diurnal_weights(p) for p in TARGETS}
+    cov = station_cov()
+    if cov:
+        print(f"  station-specific diurnal from training CoV "
+              f"({len(set(k[0] for k in cov))} stations)")
+    else:
+        print("  [warn] training CSV absent -- template diurnal for all stations")
     written = []
     for sid, grp in daily.groupby("site_id"):
         grp = grp.sort_values("horizon_h")
         if len(grp) != 3:
             print(f"  [warn] {sid}: {len(grp)} daily rows (expect 3), skipping")
             continue
-        timestamps, series = [], {p: [] for p in TARGETS}
-        lower, upper, aqi_s, cat_s, col_s = [], [], [], [], []
+        real_name = str(grp.iloc[0]["location_name"])
+        Ws = {p: diurnal_weights(p, cov.get((real_name, p), 1.0)) for p in TARGETS}
+        # Build raw hourly per pollutant, smooth day junctions, then
+        # rescale each day back to the exact model daily mean.
+        raw = {p: [] for p in TARGETS}
         for _, d in grp.iterrows():
-            h = int(d["horizon_h"])
             for hh in range(24):
-                ts = (pd.Timestamp(d["date"]) + pd.Timedelta(hours=hh)).isoformat()
-                timestamps.append(ts)
-                vals = {}
                 for p in TARGETS:
-                    v = max(0.0, float(d[p]) * W[p][hh])
-                    series[p].append(round(v, 1))
-                    vals[p] = v
-                band = {p: 1.25 * mae_h.get((p, h), 10.0) for p in ("pm25", "pm10")}
-                lower.append(round(max(0.0, vals["pm25"] - band["pm25"]), 1))
-                upper.append(round(vals["pm25"] + band["pm25"], 1))
-                res = naqi.calculate_naqi(
-                    {"pm25": vals["pm25"], "pm10": vals["pm10"],
-                     "no2": vals["no2"], "o3": vals["o3"]})
-                aqi_s.append(res.overall_aqi)
-                cat_s.append(res.category)
-                col_s.append(res.color)
+                    raw[p].append(max(0.0, float(d[p]) * Ws[p][hh]))
+        for p in TARGETS:
+            raw[p] = smooth_junctions(raw[p])
+        series = {p: [] for p in TARGETS}
+        day_rows = list(grp.iterrows())
+        for i, (_, d) in enumerate(day_rows):
+            for hh in range(24):
+                for p in TARGETS:
+                    series[p].append(raw[p][i * 24 + hh])
+        # exact-mean rescale per day (keeps verification honest)
+        for i, (_, d) in enumerate(day_rows):
+            for p in TARGETS:
+                seg = series[p][i * 24:(i + 1) * 24]
+                m = sum(seg) / 24
+                target = float(d[p])
+                series[p][i * 24:(i + 1) * 24] = (
+                    [round(x * target / m, 1) for x in seg] if m else seg)
+        timestamps = [
+            (pd.Timestamp(d["date"]) + pd.Timedelta(hours=hh)).isoformat() + IST_SUFFIX
+            for _, d in grp.iterrows() for hh in range(24)
+        ]
+        lower, upper, aqi_s, cat_s, col_s = [], [], [], [], []
+        for i in range(72):
+            h = int(grp.iloc[i // 24]["horizon_h"])
+            vals = {p: series[p][i] for p in TARGETS}
+            band = {p: 1.25 * mae_h.get((p, h), 10.0) for p in ("pm25", "pm10")}
+            lower.append(round(max(0.0, vals["pm25"] - band["pm25"]), 1))
+            upper.append(round(vals["pm25"] + band["pm25"], 1))
+            res = naqi.calculate_naqi(
+                {"pm25": vals["pm25"], "pm10": vals["pm10"],
+                 "no2": vals["no2"], "o3": vals["o3"]})
+            aqi_s.append(res.overall_aqi)
+            cat_s.append(res.category)
+            col_s.append(res.color)
         pm10_band_h1 = 1.25 * mae_h.get(("pm10", 1), 25.0)
         payload = {
             "station_id": sid,
@@ -209,6 +279,10 @@ def main() -> None:
             "source_file": fc_path.name,
             "downscaled": True,
             "native_resolution": "daily",
+            "diurnal_note": ("hourly shape = cosine peak per pollutant, amplitude "
+                             "scaled per station by observed day-to-day CoV; 24h mean "
+                             "== model daily value exactly; day junctions smoothed"),
+            "tz": "Asia/Kolkata",
             "band_note": "lower/upper = pm25 +/- 1.25x per-horizon MAE (~80% band); not TFT quantiles",
             "timestamps": timestamps,
             "pm25": series["pm25"], "pm10": series["pm10"],

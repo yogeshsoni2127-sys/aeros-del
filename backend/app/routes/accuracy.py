@@ -71,7 +71,16 @@ async def accuracy_summary(request: Request, include_gbm: bool = False):
         return {"available": False,
                 "reason": f"No database at {db} — run server once first.",
                 "ensemble_72h": _ensemble_72h_block()}
-    series = load_series(str(db))
+    try:
+        series = load_series(str(db))
+    except Exception as e:
+        # Fresh disk: DB file exists but tables aren't created yet (first
+        # refresh still running). Still serve the static ensemble skill so
+        # the Forecast Skill panel is never blank.
+        logger.debug("accuracy series unavailable: %s", e)
+        return {"available": False,
+                "reason": "History still warming up — ensemble skill below.",
+                "ensemble_72h": _ensemble_72h_block()}
     if not series:
         return {"available": False,
                 "reason": "Database has no readings yet.",

@@ -411,7 +411,8 @@ class AQIService:
 
         # REAL-model overlay: SIH-p2 exporter output (daily TFT+XGB+LGBM,
         # hourly-downscaled) wins over the baseline ensemble wherever it
-        # is fresh (<36h). Falls back silently when stale/missing.
+        # is fresh (<60h, daily_refresh.sh runs every 24h). Falls back
+        # to baseline when stale/missing; the UI vintage badge warns first.
         self._apply_real_overlay()
 
         # Spatial forecast grid overlay (from state so the real-model
@@ -427,7 +428,10 @@ class AQIService:
             idx = json.loads(idx_path.read_text())
             gen = datetime.fromisoformat(str(idx.get("generated_at", "")))
             age_h = (datetime.now(timezone.utc) - gen).total_seconds() / 3600.0
-            if age_h > 36:
+            # 60h gate: daily_refresh.sh runs every 24h, so one missed day
+            # degrades via the UI vintage badge instead of silently
+            # swapping to baseline. Beyond 60h the feed is truly dead.
+            if age_h > 60:
                 logger.info("Real overlay stale (%.1fh) — using live ensemble", age_h)
                 return {}
             for fname in idx.get("station_forecasts", []):

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-13T19:59:52.189164+00:00",
+  "generated_at": "2026-09-13T20:32:02.934277+00:00",
   "source_forecast": "forecast_aqi_72h_d84bdae5.csv",
   "models": {
     "tft": "Temporal Fusion Transformer (pytorch-forecasting)",

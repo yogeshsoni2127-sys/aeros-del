@@ -243,6 +243,15 @@
             `TFT+XGB+LGBM · test RMSE PM2.5 ${rmse.pm25 ?? '—'}, PM10 ${rmse.pm10 ?? '—'}, ` +
             `NO2 ${rmse.no2 ?? '—'}, O3 ${rmse.o3 ?? '—'}` +
             (r.real_overlay_n ? ` · live overlay on ${r.real_overlay_n} stations` : ''));
+          // Feed vintage: warn visibly instead of silently falling back.
+          try {
+            const ageH = (Date.now() - new Date(e72.generated_at).getTime()) / 36e5;
+            const ageTxt = ageH < 1 ? `${Math.round(ageH * 60)}m` : `${Math.round(ageH)}h`;
+            const stale = ageH > 60 ? ' · ⚠ STALE, showing baseline fallback' :
+              ageH > 36 ? ' · aging, refresh due' :
+              ageH > 24 ? ' · aging' : '';
+            lines.push(`Feed vintage: ${ageTxt} old${stale}`);
+          } catch (e) { /* clock parse failed — skip badge */ }
         }
         el.innerHTML = lines.join('<br>');
       } catch (e) {
@@ -286,38 +295,62 @@
       try {
         if (note && force) note.textContent = 'Recomputing…';
         const r = await Utils.fetchJSON('/api/v1/accuracy/summary');
+        // Real 72h ensemble skill (SIH-p2 daily TFT+XGB+LGBM) renders even
+        // when the live-DB backtest has no history yet (r.available false).
+        const e72 = r.ensemble_72h;
+        const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+        if (e72 && e72.per_horizon_backtest) {
+          const h1 = e72.per_horizon_backtest.filter((x) => x.horizon_h === 1);
+          const pm = h1.find((x) => x.target === 'pm25');
+          const aq = e72.aqi_skill || {};
+          if (pm) {
+            if (document.getElementById('accRmse').textContent === '—') {
+              set('accRmse', `Day-1 ${pm.rmse}`);
+              set('accMae', `Day-1 ${pm.mae}`);
+            }
+            if (document.getElementById('accCat').textContent === '—' &&
+                aq.aqi_exact_acc != null) {
+              set('accCat', Math.round(aq.aqi_exact_acc * 100) + '%');
+            }
+            if (document.getElementById('accSkill').textContent === '—') {
+              const h3 = e72.per_horizon_backtest.find(
+                (x) => x.target === 'pm25' && x.horizon_h === 3);
+              set('accSkill', h3 ? `→D3 ${h3.rmse}` : 'Day-1 ✓');
+            }
+          }
+          if (note) {
+            const line = document.createElement('div');
+            line.className = 'acc-note';
+            line.id = 'accEnsemble';
+            const old = document.getElementById('accEnsemble');
+            if (old) old.remove();
+            line.innerHTML =
+              `72h ensemble (TFT+XGBoost+LightGBM, 27 stns): PM2.5 Day-1 RMSE ` +
+              `${pm ? pm.rmse : '—'} µg/m³ · Day-3 ` +
+              `${(e72.per_horizon_backtest.find((x) => x.target === 'pm25' && x.horizon_h === 3) || {}).rmse ?? '—'}` +
+              ` · AQI exact ${aq.aqi_exact_acc != null ? Math.round(aq.aqi_exact_acc * 100) + '%' : '—'}` +
+              `, ±1 ${aq.aqi_within1_acc != null ? Math.round(aq.aqi_within1_acc * 100) + '%' : '—'}` +
+              ` <a href="/api/v1/accuracy/model-status" target="_blank">full skill JSON</a>`;
+            note.after(line);
+          }
+        }
         if (!r.available) {
           if (note) note.textContent = (r.reason || 'No history yet — run server longer.');
           return;
         }
         // Prefer the long-lead bucket (>6h ≈ 24h skill); fall back to any.
+        // (acc cells already carry ensemble Day-1 values when DB is empty.)
         const b = r.buckets?.['>6h']?.baseline || r.buckets?.['<=1h']?.baseline || {};
         const skill = r.skill_vs_persistence?.['>6h'];
-        const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-        set('accMae', b.mae != null ? b.mae : '—');
-        set('accRmse', b.rmse != null ? b.rmse : '—');
-        set('accSkill', skill != null ? (skill > 0 ? '+' + (skill * 100).toFixed(0) + '%' : (skill * 100).toFixed(0) + '%') : '—');
-        set('accCat', b.cat_acc != null ? Math.round(b.cat_acc * 100) + '%' : '—');
-        // Real 72h ensemble skill (SIH-p2 daily TFT+XGB+LGBM) when exported.
-        const e72 = r.ensemble_72h;
-        if (note && e72 && e72.per_horizon_backtest) {
-          const h1 = e72.per_horizon_backtest.filter((x) => x.horizon_h === 1);
-          const pm = h1.find((x) => x.target === 'pm25');
-          const aq = e72.aqi_skill || {};
-          const line = document.createElement('div');
-          line.className = 'acc-note';
-          line.innerHTML =
-            `72h ensemble (TFT+XGBoost+LightGBM, 27 stns): PM2.5 Day-1 RMSE ` +
-            `${pm ? pm.rmse : '—'} µg/m³ · Day-3 ` +
-            `${(e72.per_horizon_backtest.find((x) => x.target === 'pm25' && x.horizon_h === 3) || {}).rmse ?? '—'}` +
-            ` · AQI exact ${aq.aqi_exact_acc != null ? Math.round(aq.aqi_exact_acc * 100) + '%' : '—'}` +
-            `, ±1 ${aq.aqi_within1_acc != null ? Math.round(aq.aqi_within1_acc * 100) + '%' : '—'}` +
-            ` <a href="/api/v1/accuracy/model-status" target="_blank">full skill JSON</a>`;
-          note.after(line);
+        if (b.mae != null) set('accMae', b.mae);
+        if (b.rmse != null) set('accRmse', b.rmse);
+        if (skill != null) {
+          set('accSkill', skill > 0 ? '+' + (skill * 100).toFixed(0) + '%' : (skill * 100).toFixed(0) + '%');
         }
+        if (b.cat_acc != null) set('accCat', Math.round(b.cat_acc * 100) + '%');
         if (note) note.innerHTML =
           `${r.pairs} tested pairs · r=${r.pearson_r_baseline} · ` +
-          `<a href="/api/v1/accuracy/stations" target="_blank">per-station AQI table (54)</a>`;
+          `<a href="/api/v1/accuracy/stations" target="_blank">per-station AQI table</a>`;
         this._accLoaded = true;
       } catch (e) {
         if (note) note.textContent = 'Skill unavailable (backend offline).';
