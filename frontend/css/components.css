@@ -1,12 +1,12 @@
 /* ═══════════════════════════════════════════════════════════════
-   AEROS — Reusable Component Styles (Apple gallery edition)
+   AEROS — Reusable Component Styles (PlayStation chapter edition)
    ═══════════════════════════════════════════════════════════════ */
 
-/* ── Loading shimmer (pearl, flat) ────────────────────────────── */
+/* ── Loading shimmer (soft, flat) ───────────────────────────────── */
 .shimmer {
   position: relative;
   overflow: hidden;
-  background: var(--surface-pearl);
+  background: var(--surface-soft);
   border-radius: var(--radius-sm);
 }
 .shimmer::after {
@@ -17,7 +17,7 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(0, 0, 0, 0.05),
+    rgba(0, 0, 0, 0.06),
     transparent
   );
   animation: shimmer 1.4s infinite;
@@ -29,19 +29,19 @@
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  font-weight: 400;
+  font-weight: 500;
   padding: 8px 14px;
   border-radius: var(--radius-md);
-  border: 1px solid var(--divider-soft);
-  background: var(--surface-pearl);
-  color: var(--ink-80);
+  border: 1px solid var(--hairline-light);
+  background: var(--surface-soft);
+  color: var(--mute-light);
 }
 
 /* ── Skeleton generic ─────────────────────────────────────────── */
 .skeleton {
   background: linear-gradient(
-    100deg, var(--divider-soft) 40%, var(--hairline) 50%,
-    var(--divider-soft) 60%
+    100deg, var(--surface-soft) 40%, var(--hairline-light) 50%,
+    var(--surface-soft) 60%
   );
   background-size: 200% 100%;
   animation: skeleton 1.2s linear infinite;
@@ -54,58 +54,60 @@
 .updated {
   font-family: var(--font-data);
   font-size: 12px;
-  color: var(--text-dim);
+  color: var(--mute-dark);
   white-space: nowrap;
 }
 
-/* ── Station search: the search-input pill ──────────────────────── */
+/* ── Station search: 4px-radius input ───────────────────────────── */
 .station-search-wrap { margin-bottom: 8px; }
 .station-search {
   width: 100%;
-  height: 44px;
-  font-size: 17px;
+  height: 48px;
+  font-size: 18px;
   color: var(--text-strong);
-  background: var(--canvas);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: var(--radius-pill);
-  padding: 12px 20px;
+  background: var(--canvas-light);
+  border: 1px solid var(--ash-light);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
   outline: none;
 }
 .station-search::placeholder { color: var(--text-dim); }
-.station-search:focus { border-color: var(--primary); }
+.station-search:focus { border: 2px solid var(--primary); padding: 11px 15px; }
 
-/* ── Mini action button: ghost pill ─────────────────────────────── */
+/* ── Mini action button: secondary outline pill ─────────────────── */
 .mini-btn {
   font-size: 14px;
-  letter-spacing: -0.224px;
-  color: var(--primary);
+  font-weight: 700;
+  letter-spacing: 0.324px;
+  color: var(--ink);
   background: transparent;
-  border: 1px solid var(--primary);
+  border: 1px solid var(--ash-light);
   border-radius: var(--radius-pill);
-  padding: 11px 22px;
+  padding: 12px 28px;
   cursor: pointer;
   transition: transform 0.15s;
 }
-.mini-btn:hover { color: var(--primary); }
-.mini-btn:active { transform: scale(0.95); }
+.mini-btn:hover { color: var(--ink); }
+.mini-btn:active { transform: scale(0.97); box-shadow: var(--shadow-press); }
 
-/* ── Advisory language toggle: configurator chips ───────────────── */
+/* ── Advisory language toggle: filter pills ─────────────────────── */
 .lang-toggle { display: flex; gap: 4px; }
 .lang-toggle button {
   font-size: 14px;
-  padding: 12px 16px;
+  font-weight: 700;
+  letter-spacing: 0.324px;
+  padding: 8px 16px;
   border-radius: var(--radius-pill);
-  border: 1px solid var(--hairline);
-  background: var(--canvas);
+  border: 1px solid transparent;
+  background: var(--surface-soft);
   color: var(--ink);
   cursor: pointer;
-  transition: border-color 0.15s;
+  transition: background 0.15s;
 }
 .lang-toggle button.active {
   color: var(--ink);
-  border: 2px solid var(--primary-focus);
-  background: var(--canvas);
-  padding: 11px 15px;
+  background: var(--canvas-light);
+  border-color: var(--hairline-light);
 }
 
 /* ── Ticker: pause on hover so advisories stay readable ─────────── */

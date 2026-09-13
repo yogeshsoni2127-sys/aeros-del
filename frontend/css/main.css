@@ -1,49 +1,53 @@
 /* ═══════════════════════════════════════════════════════════════
-   AEROS — Design System & Tokens (Apple gallery edition)
-   Photography-first chrome: parchment canvas, white utility cards,
-   near-black tiles, one Action Blue. No decorative gradients, no
-   shadows on chrome.
+   AEROS — Design System & Tokens (PlayStation chapter edition)
+   Black nav · dark map hero · light utility cards · blue ticker
+   band. Pill CTAs, 8px cards, SST-substitute type. Imagery and the
+   map do the storytelling; chrome stays flat and quiet.
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
-  /* ── Apple surfaces ─────────────────────────────────────────── */
-  --canvas: #ffffff;
-  --canvas-parchment: #f5f5f7;
-  --surface-pearl: #fafafc;
-  --surface-tile-1: #272729;
-  --surface-tile-2: #2a2a2c;
-  --surface-tile-3: #252527;
-  --surface-black: #000000;
+  /* ── Brand ──────────────────────────────────────────────────── */
+  --primary: #0070d1;
+  --primary-pressed: #0064b7;
+  --primary-active: #004d8d;
+  --on-primary: #ffffff;
+  --link-light: #0064b7;
+  --link-dark: #53b1ff;
+  --commerce: #d53b00;
+  --commerce-pressed: #aa2f00;
 
-  /* ── Ink ────────────────────────────────────────────────────── */
-  --ink: #1d1d1f;
-  --ink-80: #333333;
-  --ink-48: #7a7a7a;
+  /* ── Ink & text ─────────────────────────────────────────────── */
+  --ink: #000000;
+  --body-light: rgba(0, 0, 0, 0.6);
+  --mute-light: #6b6b6b;
+  --ash-light: #cccccc;
   --on-dark: #ffffff;
-  --body-muted-dark: #cccccc;
+  --body-dark: rgba(255, 255, 255, 0.7);
+  --mute-dark: rgba(229, 229, 229, 0.55);
 
-  /* ── The single accent ──────────────────────────────────────── */
-  --primary: #0066cc;
-  --primary-focus: #0071e3;
-  --primary-on-dark: #2997ff;
+  /* ── Surfaces ───────────────────────────────────────────────── */
+  --canvas-light: #ffffff;
+  --surface-soft: #f3f3f3;
+  --surface-card: #f5f7fa;
+  --canvas-dark: #000000;
+  --surface-dark-elevated: #121314;
+  --surface-dark-card: #181818;
+  --hairline-light: #f3f3f3;
+  --hairline-dark: rgba(229, 229, 229, 0.2);
 
-  /* ── Hairlines ──────────────────────────────────────────────── */
-  --hairline: #e0e0e0;
-  --divider-soft: #f0f0f0;
-
-  /* ── Legacy aliases (same layout files, Apple values) ───────── */
-  --bg-deep: var(--canvas-parchment);
-  --bg-panel: var(--canvas);
-  --bg-panel-strong: var(--canvas);
+  /* ── Legacy aliases (layout files keep working) ─────────────── */
+  --bg-deep: var(--canvas-light);
+  --bg-panel: var(--canvas-light);
+  --bg-panel-strong: var(--canvas-light);
   --electric: var(--primary);
   --toxic: #00a651;
   --amber: #b26a00;
-  --danger: #d70015;
-  --glass: var(--canvas);
-  --glass-border: var(--hairline);
+  --danger: #c81b3a;
+  --glass: var(--canvas-light);
+  --glass-border: var(--hairline-light);
   --text-strong: var(--ink);
-  --text-mid: var(--ink-80);
-  --text-dim: var(--ink-48);
+  --text-mid: var(--body-light);
+  --text-dim: var(--mute-light);
 
   /* AQI scale (data semantics — unchanged) */
   --aqi-good: #00e400;
@@ -54,21 +58,22 @@
   --aqi-severe: #99004c;
   --aqi-severe-plus: #7e0023;
 
-  /* ── Typography: SF-first stack, Inter fallback ─────────────── */
-  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif;
-  --font-text: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
+  /* ── Typography: Roboto Light display, Inter body ───────────── */
+  --font-display: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  --font-text: 'Inter', system-ui, -apple-system, sans-serif;
   --font-head: var(--font-display);
   --font-data: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
   --font-body: var(--font-text);
 
-  /* ── Shape (Apple radii) ────────────────────────────────────── */
-  --radius-sm: 8px;
-  --radius-md: 11px;
-  --radius-lg: 18px;
+  /* ── Shape: pills + 8px cards, bands flat ───────────────────── */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
   --radius-pill: 9999px;
 
-  /* Elevation: none on chrome. (No --glow-*, no panel shadows.) */
+  /* Elevation: flat chrome; press lift only */
   --shadow-panel: none;
+  --shadow-press: 0 4px 12px rgba(0, 0, 0, 0.16);
 
   /* ── Spacing ────────────────────────────────────────────────── */
   --space-1: 4px;
@@ -91,30 +96,31 @@ html, body {
 
 body {
   font-family: var(--font-body);
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 400;
-  line-height: 1.47;
-  letter-spacing: -0.374px;
-  background: var(--canvas-parchment);
+  line-height: 1.5;
+  letter-spacing: 0.1px;
+  background: var(--canvas-light);
   color: var(--text-strong);
   overflow: hidden;
 }
 
 h1, h2, h3 {
   font-family: var(--font-head);
-  font-weight: 600;
-  letter-spacing: -0.28px;
+  font-weight: 300;
+  letter-spacing: -0.1px;
+  line-height: 1.25;
 }
 
 .accent {
   color: var(--primary);
 }
 
-/* Scrollbars: quiet hairline style */
+/* Scrollbars: quiet */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: #d2d2d7;
+  background: var(--ash-light);
   border-radius: 8px;
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
@@ -125,7 +131,7 @@ h1, h2, h3 {
 .strong { color: var(--text-strong); }
 
 button, input { font-family: var(--font-body); outline: none; }
-button:focus-visible { outline: 2px solid var(--primary-focus); }
-button:active { transform: scale(0.95); }
+button:focus-visible { outline: none; border: 2px solid var(--primary); }
+button:active { transform: scale(0.97); }
 
-a { color: var(--primary); }
+a { color: var(--link-light); }

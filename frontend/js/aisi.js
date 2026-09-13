@@ -127,9 +127,9 @@
       const y = h - ((v - min) / span) * (h - 6) - 3;
       i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
     });
-    ctx.strokeStyle = color || '#0066cc';
+    ctx.strokeStyle = color || '#0070d1';
     ctx.lineWidth = 2;
-    ctx.shadowColor = color || '#0066cc';
+    ctx.shadowColor = color || '#0070d1';
     ctx.shadowBlur = 0;
     ctx.stroke();
   }
