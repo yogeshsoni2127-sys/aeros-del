@@ -585,7 +585,10 @@
 
       const listEl = document.getElementById('stationList');
       if (!rows.length) {
-        listEl.innerHTML = '<div class="dim" style="font-size:12px">No stations match.</div>';
+        const msg = this.state.stationFilter
+          ? 'No stations match.'
+          : 'No live stations right now — feed degraded or refreshing.';
+        listEl.innerHTML = `<div class="dim" style="font-size:12px">${msg}</div>`;
         return;
       }
       listEl.innerHTML = rows

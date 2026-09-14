@@ -569,7 +569,7 @@ class AQIService:
         plume = self.state.get("plume", {})
 
         trend_label, _ = self.severity.forecast_trend(forecast.get("aqi", []))
-        dominants = (station or {}).get("current", {}).get("pollutants", {})
+        dominants = ((station or {}).get("current") or {}).get("pollutants", {})
         if not dominants and self.state.get("raw_records"):
             dominants = self.state["raw_records"][0].get("pollutants", {})
 
@@ -737,7 +737,16 @@ class AQIService:
         currents = [s["current"] for s in stations if s.get("current")]
 
         if not currents:
-            self.state["domain_summary"] = {}
+            self.state["domain_summary"] = {
+                "station_count": 0,
+                "mean_aqi": None,
+                "worst": None,
+                "category_counts": {},
+                "fire_count": len(self.state.get("fires", [])),
+                "data_source": self.state.get("data_source"),
+                "waqi_filled": self.state.get("waqi_filled", 0),
+                "freshness": self.state.get("freshness", {}),
+            }
             return
 
         worst = max(currents, key=lambda c: c.get("aqi", 0))
