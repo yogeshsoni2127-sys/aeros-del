@@ -42,6 +42,12 @@ from .openaq_client import StationReading, POLLUTANT_BOUNDS
 from .naqi_calculator import BREAKPOINTS
 
 RESOURCE_UUID = "3b01bcb8-0b14-4abf-b6f2-c1bfd384ba69"
+# data.gov.in silently holds non-browser User-Agents open until timeout
+# (verified: python-httpx UA -> ReadTimeout, browser UA -> 200 in 0.4s).
+# Every request from this client must carry a browser UA.
+BROWSER_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+              "AppleWebKit/537.36 (KHTML, like Gecko) "
+              "Chrome/126.0 Safari/537.36")
 BASE_URL = f"https://api.data.gov.in/resource/{RESOURCE_UUID}"
 
 # Delhi NCR cities as named by CPCB in this resource.
@@ -206,7 +212,10 @@ class CPCBDataGovClient:
             try:
                 import aiohttp
                 self._last = time.time()
-                async with aiohttp.ClientSession() as session:
+                async with aiohttp.ClientSession(headers={
+                        "User-Agent": BROWSER_UA,
+                        "Accept": "application/json",
+                }) as session:
                     async with session.get(
                         BASE_URL, params=params,
                         timeout=aiohttp.ClientTimeout(total=self.timeout),
@@ -222,7 +231,11 @@ class CPCBDataGovClient:
                 return None
         try:
             if self._http is None:
-                self._http = httpx.AsyncClient(timeout=self.timeout)
+                self._http = httpx.AsyncClient(
+                    timeout=self.timeout,
+                    headers={"User-Agent": BROWSER_UA,
+                             "Accept": "application/json"},
+                )
             self._last = time.time()
             r = await self._http.get(BASE_URL, params=params)
             if r.status_code != 200:
