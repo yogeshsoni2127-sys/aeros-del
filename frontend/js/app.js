@@ -206,16 +206,33 @@
       this.state.alertCache = {};
       this._renderAlertsForLang(snap.alerts || []);
 
-      // Mode badge + last-updated stamp
+      // Mode badge + last-updated stamp (+ freshness trust signal:
+      // degraded/stale is shown, never silent).
       const badge = document.getElementById('modeBadge');
       const src = snap.data_source || 'demo';
+      const fresh = snap.freshness || {};
+      const nFresh = fresh.fresh || 0;
+      const nStale = fresh.stale || 0;
       badge.textContent = src.toUpperCase();
       badge.className = 'mode-badge ' + src;
       const upd = document.getElementById('updatedAt');
       if (upd) {
-        upd.textContent = snap.last_update
+        let txt = snap.last_update
           ? `Updated ${Utils.fmtDT(snap.last_update)} · ${src.toUpperCase()}`
           : '—';
+        if (src !== 'demo' && (nFresh || nStale)) {
+          txt += ` · ${nFresh} fresh`;
+          if (nStale) txt += ` · ⚠ ${nStale} stale`;
+        }
+        upd.textContent = txt;
+      }
+      const ms = document.getElementById('mapStatus');
+      if (ms) {
+        if (src === 'degraded' || nStale > 0) {
+          ms.textContent = `⚠ ${nStale} station${nStale === 1 ? '' : 's'} stale (>3h) — excluded from live mean`;
+        } else if (src === 'demo') {
+          ms.textContent = 'demo data — set DATAGOV_API_KEY for live CPCB feed';
+        }
       }
 
       // Accuracy (fetch once per snapshot; cheap cached endpoint)
@@ -579,12 +596,16 @@
           const sel = this.state.selectedStation === s.id ? 'selected' : '';
           const histN = s.history_count != null ? s.history_count : ((s.history || []).length);
           const stale = histN < 6 ? ' · only ' + histN + ' pts' : ' · ' + histN + ' pts';
+          // Per-station upstream age (trust signal — 30h lag is visible).
+          const ageH = (c.age_hours != null) ? c.age_hours : Utils.readingAgeHours(c.timestamp);
+          const ageTxt = ageH == null ? ''
+            : (ageH > 3 ? ` · ⚠ STALE ${Utils.fmtAge(c.timestamp)}` : ` · ${Utils.fmtAge(c.timestamp)} old`);
           return `
             <div class="station-row ${sel}" style="--row-color:${color}" data-id="${Utils.esc(s.id)}">
               <span class="dot-ind"></span>
               <div class="meta">
                 <div class="name">${Utils.esc(s.short_name || s.name)}</div>
-                <div class="zone">${Utils.esc(c.category || '—')} · ${Utils.esc(c.timestamp ? Utils.fmtTime(c.timestamp) : '')}${Utils.esc(stale)}</div>
+                <div class="zone">${Utils.esc(c.category || '—')} · ${Utils.esc(c.timestamp ? Utils.fmtTime(c.timestamp) : '')}${Utils.esc(stale)}${Utils.esc(ageTxt)}</div>
               </div>
               <span class="aqi">${c.aqi != null ? c.aqi : '—'}</span>
             </div>`;

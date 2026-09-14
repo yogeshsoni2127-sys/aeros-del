@@ -73,6 +73,23 @@
     return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
+  // Hours since an upstream reading timestamp (null when unparseable).
+  function readingAgeHours(iso) {
+    if (!iso) return null;
+    const t = new Date(iso).getTime();
+    if (isNaN(t)) return null;
+    return Math.max(0, (Date.now() - t) / 36e5);
+  }
+
+  // Compact age for station rows: "12m", "2h", "3d", "—".
+  function fmtAge(iso) {
+    const h = readingAgeHours(iso);
+    if (h == null) return '—';
+    if (h < 1) return `${Math.max(1, Math.round(h * 60))}m`;
+    if (h < 48) return `${Math.round(h)}h`;
+    return `${Math.round(h / 24)}d`;
+  }
+
   function fmtDT(iso) {
     if (!iso) return '—';
     const d = new Date(iso);
@@ -124,6 +141,8 @@
     fetchJSON,
     wsUrl,
     fmtTime,
+    fmtAge,
+    readingAgeHours,
     fmtDT,
     fmtDayTime,
     esc,

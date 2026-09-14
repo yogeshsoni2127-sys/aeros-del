@@ -16,6 +16,7 @@ services:
       GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
       MAPTILER_KEY: "${MAPTILER_KEY:-}"
       CARTO_KEY: "${CARTO_KEY:-}"
+      DATAGOV_API_KEY: "${DATAGOV_API_KEY:-}"
       DATA_REFRESH_INTERVAL: "300"
     volumes:
       - ./data:/app/data

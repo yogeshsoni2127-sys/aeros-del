@@ -120,6 +120,7 @@
   transition: color var(--dur-fast) var(--ease-warp), border-color var(--dur-fast) var(--ease-warp);
 }
 .mode-badge.live { color: #7ee2a8; border-color: rgba(126,226,168,0.35); }
+.mode-badge.degraded { color: #e8b04b; border-color: rgba(232,176,75,0.35); }
 .mode-badge.demo { color: var(--mute); }
 
 .updated {

@@ -31,6 +31,7 @@ class Settings:
     gemini_api_key: Optional[str] = None
     maptiler_key: Optional[str] = None
     carto_key: Optional[str] = None
+    datagov_api_key: Optional[str] = None
 
     # ── Server ────────────────────────────────────────────────────────
     host: str = "0.0.0.0"
@@ -106,6 +107,8 @@ class Settings:
             gemini_api_key=os.getenv("GEMINI_API_KEY"),
             maptiler_key=os.getenv("MAPTILER_KEY"),
             carto_key=os.getenv("CARTO_KEY") or os.getenv("CARTO_API_KEY"),
+            datagov_api_key=(os.getenv("DATAGOV_API_KEY")
+                             or os.getenv("CPCB_DATAGOV_KEY")),
             host=os.getenv("HOST", "0.0.0.0"),
             port=int(os.getenv("PORT", "8000")),
             debug=os.getenv("DEBUG", "false").lower() == "true",

@@ -32,5 +32,7 @@ services:
         sync: false
       - key: CARTO_KEY
         sync: false
+      - key: DATAGOV_API_KEY
+        sync: false
       - key: OPENWEATHER_API_KEY
         sync: false

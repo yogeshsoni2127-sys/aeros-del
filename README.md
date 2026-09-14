@@ -86,6 +86,7 @@ Missing keys = automatic demo fallback, no crash.
 | `OPENAQ_API_KEY` | docs.openaq.org | Live PM2.5/PM10 |
 | `OPENWEATHER_API_KEY` | openweathermap.org | (optional, Open-Meteo is default) |
 | `NASA_FIRMS_API_KEY` | firms.modaps.eosdis.nasa.gov | Fire hotspots |
+| `DATAGOV_API_KEY` | data.gov.in (“CPCB AQI API”, free) | Primary CPCB ground truth (hourly Delhi NCR) |
 | `GEMINI_API_KEY` | aistudio.google.com | LLM advisory rephrase (optional) |
 | `MAPTILER_KEY` | maptiler.com | Premium dark basemap (optional, OSM default otherwise) |
 | `CARTO_KEY` | carto.com/basemaps/apikey (free) | CARTO raster basemap — key now required, OSM default without |

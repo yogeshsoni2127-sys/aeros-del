@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 from backend.app.config import Settings, PROJECT_ROOT, DATA_DIR, MODELS_DIR
 
 from backend.data.openaq_client import OpenAQClient
+from backend.data.cpcb_datagov_client import CPCBDataGovClient
 from backend.data.waqi_client import WAQIClient
 from backend.data.weather_client import WeatherClient
 from backend.data.fire_client import FireClient
@@ -45,21 +46,32 @@ class AQIService:
     and exposes a consistent snapshot for the API layer.
     """
 
+    # Readings older than this are rejected by the freshness gate and
+    # their stations treated as dark (filled by the next chain source).
+    FRESHNESS_MAX_AGE_H = 3.0
+    # Minimum fresh stations for data_source="live"; fewer -> "degraded".
+    MIN_FRESH_FOR_LIVE = 5
+
     def __init__(self, settings: Optional[Settings] = None):
         self.settings = (settings if settings is not None
                          else Settings.from_env())
 
         # ── Data clients ────────────────────────────────────────────
+        # Chain: CPCB data.gov.in (primary ground truth) -> WAQI fill ->
+        # OpenAQ fill -> demo. See _collect_raw_data.
+        self.cpcb_datagov = CPCBDataGovClient(
+            api_key=self.settings.datagov_api_key,
+        )
         self.openaq = OpenAQClient(
             api_key=self.settings.openaq_api_key,
             base_url=self.settings.openaq_base_url,
             rate_limit=self.settings.openaq_rate_limit,
             max_concurrency=self.settings.openaq_max_concurrency,
         )
-        # Secondary source: fills stations OpenAQ missed (max a few per
-        # cycle so the free-token rate limit never stalls refreshes).
+        # Secondary source: fills stations the primary missed (bounded
+        # per cycle so the free-token rate limit never stalls refreshes).
         self.waqi = WAQIClient(api_key=self.settings.waqi_api_key)
-        self.waqi_fill_cap = 8
+        self.waqi_fill_cap = 16
         self.weather = WeatherClient()
         self.fire = FireClient(api_key=self.settings.nasa_firms_api_key)
         self.naqi = NAQICalculator()
@@ -110,7 +122,7 @@ class AQIService:
         self.state: Dict[str, Any] = {
             "initialized": False,
             "last_update": None,
-            "data_source": "unknown",         # live | demo
+            "data_source": "unknown",         # live | degraded | demo
             "stations": [],                   # enriched station snapshots
             "weather": {},
             "fires": [],
@@ -174,35 +186,81 @@ class AQIService:
     # ────────────────────────────────────────────────────────────────
 
     async def _collect_raw_data(self):
-        """Fetch readings, weather, fires, and persist to SQLite."""
-        readings = await self._safe(self.openaq.get_latest_measurements())
-        mapped = self._match_readings(readings or [])
+        """Fetch readings, weather, fires, and persist to SQLite.
 
-        # WAQI fallback: fill stations OpenAQ missed (capped per cycle).
+        Source chain: CPCB data.gov.in (primary, name-matched) -> WAQI
+        (fills dark stations, capped + bounded-parallel) -> OpenAQ
+        (fills still-dark stations) -> demo (only when NO source
+        returned anything). A freshness gate then rejects readings
+        older than FRESHNESS_MAX_AGE_H; data_source is "live" only
+        with >= MIN_FRESH_FOR_LIVE fresh stations, else "degraded".
+        """
+        mapped: Dict[str, Dict] = {}
+
+        # 1) CPCB primary — official ground truth.
+        cpcb_readings = await self._safe(
+            self.cpcb_datagov.get_latest_measurements()) or []
+        for sid, entry in self._match_cpcb_readings(cpcb_readings).items():
+            mapped[sid] = entry
+
+        # 2) WAQI secondary fill for stations the primary missed.
         # Only fires when a key exists AND some stations are still dark.
-        waqi_filled = 0
-        if mapped and self.settings.waqi_api_key:
-            missing = [s for s in self.stations if s["id"] not in mapped]
-            for station in missing[:self.waqi_fill_cap]:
-                feed = await self._safe(self.waqi.get_station_feed(
-                    station["latitude"], station["longitude"]))
+        waqi_targets = [s for s in self.stations
+                        if s["id"] not in mapped][:self.waqi_fill_cap]
+        if waqi_targets and self.settings.waqi_api_key:
+            _sem = asyncio.Semaphore(3)
+
+            async def _fill(station):
+                async with _sem:
+                    feed = await self._safe(self.waqi.get_station_feed(
+                        station["latitude"], station["longitude"]))
                 if feed and feed.get("pollutants"):
-                    mapped[station["id"]] = {
+                    return station["id"], {
                         "pollutants": feed["pollutants"],
                         "timestamp": feed["timestamp"],
                         "source": "waqi",
                     }
-                    waqi_filled += 1
-        if waqi_filled:
-            logger.info("WAQI fallback filled %d stations", waqi_filled)
-        self.state["waqi_filled"] = waqi_filled
+                return station["id"], None
 
-        # Fall back to demo generation when no stations resolved
-        if not mapped:
+            for sid, entry in await asyncio.gather(
+                    *(_fill(s) for s in waqi_targets)):
+                if entry is not None:
+                    mapped[sid] = entry
+
+        # 3) OpenAQ tertiary fill for still-dark stations.
+        if len(mapped) < len(self.stations):
+            openaq_readings = await self._safe(
+                self.openaq.get_latest_measurements()) or []
+            if openaq_readings:
+                for sid, entry in self._match_readings(
+                        openaq_readings, source="openaq").items():
+                    mapped.setdefault(sid, entry)
+
+        had_any_readings = bool(mapped)
+
+        # 4) Freshness gate: reject readings older than 3h (30h lag must
+        # never silently poison history/features/AISI again).
+        freshness = self._apply_freshness_gate(mapped)
+        self.state["freshness"] = freshness
+        logger.info("ingest freshness: %d fresh / %d stale "
+                    "(cpcb_fresh=%d waqi_filled=%d openaq_stale=%d)",
+                    freshness["fresh"], freshness["stale"],
+                    freshness["by_source"].get("cpcb_fresh", 0),
+                    freshness["by_source"].get("waqi_fresh", 0),
+                    freshness["by_source"].get("openaq_stale", 0))
+        self.state["waqi_filled"] = (
+            freshness["by_source"].get("waqi_fresh", 0))
+
+        # Fall back to demo generation when no source returned anything.
+        # Stale-but-present data -> "degraded" with dark stations (never
+        # demo-masked, so lag stays visible instead of silent).
+        if not had_any_readings:
             mapped = self._demo_readings()
             self.state["data_source"] = "demo"
-        else:
+        elif freshness["fresh"] >= self.MIN_FRESH_FOR_LIVE:
             self.state["data_source"] = "live"
+        else:
+            self.state["data_source"] = "degraded"
 
         # Normalize each station entry into persisted reading format
         records = []
@@ -219,6 +277,7 @@ class AQIService:
                 "longitude": station["longitude"],
                 "timestamp": reading.get("timestamp",
                                           datetime.now(timezone.utc).isoformat()),
+                "age_hours": reading.get("age_hours"),
                 "pollutants": pollutants,
                 "aqi": result.overall_aqi,
                 "category": result.category,
@@ -702,6 +761,7 @@ class AQIService:
             "fire_count": len(self.state.get("fires", [])),
             "data_source": self.state.get("data_source"),
             "waqi_filled": self.state.get("waqi_filled", 0),
+            "freshness": self.state.get("freshness", {}),
         }
 
     # ────────────────────────────────────────────────────────────────
@@ -714,6 +774,7 @@ class AQIService:
             "type": "snapshot",
             "last_update": self.state.get("last_update"),
             "data_source": self.state.get("data_source"),
+            "freshness": self.state.get("freshness", {}),
             "domain_summary": self.state.get("domain_summary", {}),
             "stations": self.state.get("stations", []),
             "aisi": self.state.get("aisi", {}),
@@ -767,10 +828,15 @@ class AQIService:
     def _station_payload(self, record: Dict) -> Dict:
         pollutants = record.get("pollutants", {})
         result = self.naqi.calculate_naqi(pollutants)
+        age = record.get("age_hours")
+        if age is None:
+            age = self._age_hours(record.get("timestamp"))
         return {
             "station_id": record.get("station_id"),
             "station_name": record.get("station_name"),
             "timestamp": record.get("timestamp"),
+            "age_hours": round(age, 2) if age is not None else None,
+            "is_stale": age is None or age > self.FRESHNESS_MAX_AGE_H,
             "pollutants": pollutants,
             "aqi": result.overall_aqi,
             "category": result.category,
@@ -862,7 +928,8 @@ class AQIService:
                     out.append(tok)
         return out
 
-    def _match_readings(self, readings: List[Any]) -> Dict[str, Dict]:
+    def _match_readings(self, readings: List[Any],
+                        source: str = "live") -> Dict[str, Dict]:
         """Map OpenAQ readings to station metadata.
 
         Name-anchored first (an OpenAQ location whose name shares a token
@@ -914,10 +981,114 @@ class AQIService:
                 mapped[station["id"]] = {
                     "pollutants": best_pollutants,
                     "timestamp": best.timestamp,
-                    "source": "live",
+                    "source": source,
                     "matched_distance_km": round(best_dist, 1),
                 }
         return mapped
+
+    def _match_cpcb_readings(self, readings: List[Any]) -> Dict[str, Dict]:
+        """Map CPCB data.gov.in readings to station metadata.
+
+        Pass 1 — name match: each CPCB station name is scored against
+        our stations by shared name-key tokens (same tokenizer as the
+        OpenAQ anchor) plus a short-name substring bonus for terse
+        names like JNU/ITO. Best score wins; ties keep station order.
+        Pass 2 — proximity fallback for name-unmatched readings that
+        carry sane coordinates (generic proximity+anchor matcher).
+        """
+        import re
+        if not readings:
+            return {}
+
+        def _tokens(text: str) -> List[str]:
+            t = re.sub(r"[^a-z0-9 ]", " ", str(text or "").lower())
+            t = re.sub(r"\b(delhi|new|sector|sec|phase|gram|nagar|marg|road|rd|station|dpcc|cpcb|uppcb|hspcb|imd|iitm|sai|teri)\b", " ", t)
+            return [tok for tok in t.split() if len(tok) >= 4]
+
+        station_keys = [(s, set(self._station_name_keys(s)),
+                         str(s.get("short_name", "")).lower())
+                        for s in self.stations]
+        mapped: Dict[str, Dict] = {}
+        leftovers = []
+        for reading in readings:
+            rname = str(getattr(reading, "station_name", "") or "")
+            rtokens = set(_tokens(rname))
+            rnorm = re.sub(r"[^a-z0-9]", "", rname.lower())
+            best_sid = None
+            best_score = 0
+            for station, keys, short in station_keys:
+                if station["id"] in mapped:
+                    continue
+                score = len(rtokens & keys)
+                if short and len(short) >= 2 and short.replace(" ", "") in rnorm:
+                    score += 2
+                if score > best_score:
+                    best_score = score
+                    best_sid = station["id"]
+            if best_sid is not None and best_score > 0:
+                mapped[best_sid] = {
+                    "pollutants": dict(reading.pollutants or {}),
+                    "timestamp": reading.timestamp,
+                    "source": "cpcb",
+                    "matched_station_name": rname,
+                }
+            else:
+                leftovers.append(reading)
+
+        # Pass 2: proximity fallback for the name-unmatched remainder.
+        if leftovers:
+            geo = [r for r in leftovers
+                   if getattr(r, "latitude", 0.0)
+                   and getattr(r, "longitude", 0.0)]
+            if geo:
+                for sid, entry in self._match_readings(
+                        geo, source="cpcb").items():
+                    if sid not in mapped:
+                        mapped[sid] = entry
+        return mapped
+
+    @staticmethod
+    def _age_hours(timestamp: Any) -> Optional[float]:
+        """Age of an upstream timestamp in hours; None if unparseable."""
+        if not timestamp:
+            return None
+        try:
+            dt = datetime.fromisoformat(str(timestamp).replace("Z", "+00:00"))
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            return max(0.0, (datetime.now(timezone.utc) - dt).total_seconds()
+                       / 3600.0)
+        except (ValueError, TypeError):
+            return None
+
+    def _apply_freshness_gate(self, mapped: Dict[str, Dict]) -> Dict[str, Any]:
+        """Drop entries older than FRESHNESS_MAX_AGE_H (in place).
+
+        Returns counters: fresh/stale totals plus per-source
+        {source}_fresh / {source}_stale tallies. Surviving entries
+        gain an `age_hours` field carried through to records.
+        """
+        by_source: Dict[str, int] = {}
+        fresh = 0
+        for sid in list(mapped.keys()):
+            entry = mapped[sid]
+            src = str(entry.get("source") or "unknown")
+            age = self._age_hours(entry.get("timestamp"))
+            if age is None or age > self.FRESHNESS_MAX_AGE_H:
+                by_source[f"{src}_stale"] = by_source.get(f"{src}_stale", 0) + 1
+                del mapped[sid]
+            else:
+                entry["age_hours"] = round(age, 2)
+                by_source[f"{src}_fresh"] = by_source.get(f"{src}_fresh", 0) + 1
+                fresh += 1
+        stale = sum(v for k, v in by_source.items() if k.endswith("_stale"))
+        return {
+            "fresh": fresh,
+            "stale": stale,
+            "max_age_h": self.FRESHNESS_MAX_AGE_H,
+            "min_for_live": self.MIN_FRESH_FOR_LIVE,
+            "by_source": by_source,
+        }
 
     def _demo_readings(self) -> Dict[str, Dict]:
         """
@@ -1039,6 +1210,7 @@ class AQIService:
 
     async def close(self):
         """Close all HTTP clients."""
+        await self._safe(self.cpcb_datagov.close())
         await self._safe(self.openaq.close())
         await self._safe(self.waqi.close())
         await self._safe(self.weather.close())
