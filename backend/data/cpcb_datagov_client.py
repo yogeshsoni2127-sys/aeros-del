@@ -164,12 +164,14 @@ class CPCBDataGovClient:
         cities: Optional[List[str]] = None,
         limit: int = 100,
         rate_limit: float = 0.5,
+        timeout: float = 15.0,
         value_mode: Optional[str] = None,
     ):
         self.api_key = (api_key or "").strip()
         self.cities = cities or list(CPCB_CITIES)
         self.limit = limit
         self.rate_limit = rate_limit
+        self.timeout = timeout
         mode = (value_mode or os.getenv("CPCB_DATAGOV_VALUE_MODE")
                 or "subindex").lower()
         self.value_mode = mode if mode in ("subindex", "concentration") \
@@ -207,7 +209,7 @@ class CPCBDataGovClient:
                 async with aiohttp.ClientSession() as session:
                     async with session.get(
                         BASE_URL, params=params,
-                        timeout=aiohttp.ClientTimeout(total=30),
+                        timeout=aiohttp.ClientTimeout(total=self.timeout),
                     ) as resp:
                         if resp.status != 200:
                             logger.warning("data.gov.in -> HTTP %s",
@@ -215,11 +217,12 @@ class CPCBDataGovClient:
                             return None
                         return await resp.json()
             except Exception as e:
-                logger.warning("data.gov.in request failed: %s", e)
+                logger.warning("data.gov.in request failed: %s: %s",
+                               type(e).__name__, e)
                 return None
         try:
             if self._http is None:
-                self._http = httpx.AsyncClient(timeout=30.0)
+                self._http = httpx.AsyncClient(timeout=self.timeout)
             self._last = time.time()
             r = await self._http.get(BASE_URL, params=params)
             if r.status_code != 200:
@@ -232,7 +235,8 @@ class CPCBDataGovClient:
                 return None
             return body
         except Exception as e:
-            logger.warning("data.gov.in request failed: %s", e)
+            logger.warning("data.gov.in request failed: %s: %s",
+                           type(e).__name__, e)
             return None
 
     async def fetch_city_records(self, city: str) -> List[Dict]:
@@ -309,8 +313,8 @@ class CPCBDataGovClient:
         One StationReading per CPCB station across the NCR cities.
 
         Groups per-pollutant records by station name; timestamp is the
-        newest last_update seen for that station. Coordinates are 0.0
-        (not shipped) — match by station name downstream.
+        newest last_update seen for that station. Coordinates attached
+        when sane — match by station name downstream, proximity fallback.
         """
         stats: Dict[str, Any] = {
             "per_city": {}, "records_raw": 0, "stations_grouped": 0,
@@ -323,8 +327,19 @@ class CPCBDataGovClient:
             return []
 
         grouped: Dict[str, Dict[str, Any]] = {}
-        for city in self.cities:
-            recs = await self.fetch_city_records(city)
+        # Cities in parallel (bounded): data.gov.in can be slow from some
+        # networks, and serial cities x timeout stalled whole refreshes.
+        # Worst case is now ~1 timeout, not N. Six concurrent polite
+        # GETs per 5-min cycle is well within fair use.
+        _city_sem = asyncio.Semaphore(3)
+
+        async def _one(city: str):
+            async with _city_sem:
+                return city, await self.fetch_city_records(city)
+
+        city_results = await asyncio.gather(
+            *(_one(c) for c in self.cities))
+        for city, recs in city_results:
             stats["per_city"][city] = len(recs)
             stats["records_raw"] += len(recs)
             for rec in recs:
