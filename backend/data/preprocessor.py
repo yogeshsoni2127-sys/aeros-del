@@ -460,6 +460,97 @@ class DataPreprocessor:
             out["aqi_mae"] = round(sum(abs(e) for e in aqis) / len(aqis), 1)
         return out
 
+    async def get_station_daily_bias(self, days: int = 14
+                                     ) -> Dict[str, Dict]:
+        """Per-station signed Day+1 bias for MOS correction.
+
+        Pairs each stored research-daily Day+1 prediction (pred - actual)
+        per pollutant using IST-day grouping in Python (UTC-substr
+        matching mis-attributes Delhi boundary hours). Returns
+        {station_id: {target: {"bias": mean_signed_error, "n": pairs}}}.
+        Stations with <3 pairs are omitted (insufficient evidence).
+        """
+        await self.initialize_database()
+        try:
+            import aiosqlite
+
+            cutoff = (datetime.now(timezone.utc)
+                      - timedelta(days=days)).isoformat()
+            async with aiosqlite.connect(self.database_path) as db:
+                db.row_factory = aiosqlite.Row
+                preds = await (await db.execute(
+                    """
+                    SELECT station_id,
+                           substr(forecast_timestamp, 1, 10) AS day,
+                           pm25_pred, pm10_pred, aqi_pred
+                    FROM forecasts
+                    WHERE horizon_hours = 24 AND model = 'research-daily'
+                      AND created_at >= ?
+                    """,
+                    (cutoff,),
+                )).fetchall()
+                if not preds:
+                    return {}
+                readings = await (await db.execute(
+                    """
+                    SELECT station_id, timestamp, pm25, pm10
+                    FROM station_readings
+                    WHERE timestamp >= ?
+                    """,
+                    (cutoff,),
+                )).fetchall()
+        except ImportError:
+            return {}
+        except Exception as e:
+            logger.error(f"Failed station bias: {e}")
+            return {}
+
+        from datetime import timedelta as _td
+        ist = timezone(_td(hours=5, minutes=30))
+        realised: Dict[str, Dict[str, list]] = {}
+        for r in readings:
+            try:
+                dt = datetime.fromisoformat(
+                    str(r["timestamp"]).replace("Z", "+00:00"))
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                day = dt.astimezone(ist).date().isoformat()
+            except (ValueError, TypeError):
+                continue
+            slot = realised.setdefault(r["station_id"], {}).setdefault(day, {})
+            for pol in ("pm25", "pm10"):
+                try:
+                    v = float(r[pol]) if r[pol] is not None else None
+                except (TypeError, ValueError):
+                    v = None
+                if v is not None:
+                    slot.setdefault(pol, []).append(v)
+        out: Dict[str, Dict] = {}
+        for p in preds:
+            sid = p["station_id"]
+            day = p["day"]
+            obs = (realised.get(sid) or {}).get(day) or {}
+            for pol, key in (("pm25", "pm25_pred"), ("pm10", "pm10_pred")):
+                vals = obs.get(pol) or []
+                # Same gate as the Err column: a partial day only counts
+                # with >= 3 hourly readings.
+                if len(vals) < 3:
+                    continue
+                try:
+                    pred_v = float(p[key]) if p[key] is not None else None
+                except (TypeError, ValueError):
+                    continue
+                if pred_v is None:
+                    continue
+                actual = sum(vals) / len(vals)
+                slot = out.setdefault(sid, {}).setdefault(pol, [])
+                slot.append(pred_v - actual)
+        return {
+            sid: {pol: {"bias": round(sum(v) / len(v), 2), "n": len(v)}
+                  for pol, v in pols.items() if len(v) >= 3}
+            for sid, pols in out.items()
+        }
+
     def clean_reading(
         self,
         reading: Dict,

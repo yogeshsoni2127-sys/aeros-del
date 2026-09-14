@@ -162,9 +162,18 @@ class TFTForecaster:
         upper = [round(v * 1.30, 1) for v in predicted]
         pm10_lower = [round(max(v * 0.75, 2.0), 1) for v in lower]
         pm10_upper = [round(v * 1.32, 1) for v in upper]
+        # Independent gases (own diurnal shapes, never a PM copy).
+        from backend.ml.xgboost_forecaster import project_gases
+        aisi_gate = max(0.3, min(1.0, aisi / 8.0))
+        pbl_gate = max(0.3, min(1.0, pblh / 1000.0))
+        decay = 1.0 - 0.10 * (1.0 - aisi_gate) * (0.5 + 0.5 * pbl_gate)
+        gases = project_gases(
+            current, decay, horizon, context.get("current_no2"),
+            context.get("current_o3"), context.get("current_so2"),
+            context.get("current_co"))
 
         return {"pm25": pm25, "pm10": pm10, "lower": lower, "upper": upper,
-                "pm10_lower": pm10_lower, "pm10_upper": pm10_upper}
+                "pm10_lower": pm10_lower, "pm10_upper": pm10_upper, **gases}
 
     # ── Pure-NumPy attention baseline ────────────────────────────────
 

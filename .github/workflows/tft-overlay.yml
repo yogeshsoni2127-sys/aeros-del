@@ -1,0 +1,65 @@
+# Daily TFT-overlay bundle: full 3-member inference in the cloud, POSTed
+# to Render. No laptop dependence. ~5 min/day, well within free minutes.
+#
+# Secrets (repo Settings -> Secrets -> Actions):
+#   DATAGOV_API_KEY — live CPCB currents (same value as Render env)
+#   OPENAQ_API_KEY  — 14d tails for live seeding (free at openaq.org;
+#                     optional: without it tails ride the seed file and
+#                     go stale within weeks — tail_src says so honestly)
+#   INGEST_KEY      — overlay endpoint auth (same value as Render env)
+# Variables (optional):
+#   APP_URL         — default https://aeros-del.onrender.com
+#
+# Cron note: GitHub can start scheduled runs up to ~20 min late off-peak.
+# The 60h overlay gate absorbs a missed day; two misses degrade one rung.
+name: tft-overlay
+
+on:
+  schedule:
+    - cron: "30 1 * * *"  # 06:30 IST
+  workflow_dispatch:
+
+jobs:
+  build-and-send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements-core.txt
+            backend/requirements-ml.txt
+
+      - name: Install deps
+        run: >
+          pip install -r backend/requirements-core.txt
+          -r backend/requirements-ml.txt
+
+      - name: Build overlay bundle
+        env:
+          DATAGOV_API_KEY: ${{ secrets.DATAGOV_API_KEY }}
+          OPENAQ_API_KEY: ${{ secrets.OPENAQ_API_KEY }}
+        run: |
+          python scripts/build_tft_overlay.py --out /tmp/tft_bundle.json
+          python -c "import json; d=json.load(open('/tmp/tft_bundle.json')); print('stations:', len(d['stations']), '| generated:', d['generated_at'])"
+
+      - name: Upload bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tft-bundle
+          path: /tmp/tft_bundle.json
+          retention-days: 14
+
+      - name: POST to Render
+        env:
+          INGEST_KEY: ${{ secrets.INGEST_KEY }}
+          APP_URL: ${{ vars.APP_URL }}
+        run: |
+          python scripts/build_tft_overlay.py --bundle-in /tmp/tft_bundle.json --post "${APP_URL:-https://aeros-del.onrender.com}"

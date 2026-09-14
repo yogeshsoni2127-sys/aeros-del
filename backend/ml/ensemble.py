@@ -39,6 +39,14 @@ class ForecastResult:
     upper: List[float] = field(default_factory=list)
     pm10_lower: List[float] = field(default_factory=list)
     pm10_upper: List[float] = field(default_factory=list)
+    no2: List[float] = field(default_factory=list)
+    o3: List[float] = field(default_factory=list)
+    so2: List[float] = field(default_factory=list)
+    co: List[float] = field(default_factory=list)
+    no2_lower: List[float] = field(default_factory=list)
+    no2_upper: List[float] = field(default_factory=list)
+    o3_lower: List[float] = field(default_factory=list)
+    o3_upper: List[float] = field(default_factory=list)
     dominant_pollutant: str = "pm25"
     models: Dict[str, bool] = field(default_factory=dict)
     generated_at: str = ""
@@ -58,6 +66,14 @@ class ForecastResult:
             "upper": self.upper,
             "pm10_lower": self.pm10_lower,
             "pm10_upper": self.pm10_upper,
+            "no2": self.no2,
+            "o3": self.o3,
+            "so2": self.so2,
+            "co": self.co,
+            "no2_lower": self.no2_lower,
+            "no2_upper": self.no2_upper,
+            "o3_lower": self.o3_lower,
+            "o3_upper": self.o3_upper,
             "dominant_pollutant": self.dominant_pollutant,
             "models": self.models,
             "horizon_hours": len(self.timestamps),
@@ -159,6 +175,16 @@ class EnsembleForecaster:
         upper = _band("upper", max)
         pm10_lower = _band("pm10_lower", min)
         pm10_upper = _band("pm10_upper", max)
+        # Gases: every member now serves independent gas curves (own
+        # diurnal shapes), so blend them like PM instead of copying PM.
+        no2 = _blend("no2")
+        o3 = _blend("o3")
+        so2 = _blend("so2")
+        co = _blend("co")
+        no2_lower = _band("no2_lower", min)
+        no2_upper = _band("no2_upper", max)
+        o3_lower = _band("o3_lower", min)
+        o3_upper = _band("o3_upper", max)
 
         return self._finalize(
             station_id=station_id,
@@ -169,6 +195,14 @@ class EnsembleForecaster:
             upper=upper,
             pm10_lower=pm10_lower,
             pm10_upper=pm10_upper,
+            no2=no2,
+            o3=o3,
+            so2=so2,
+            co=co,
+            no2_lower=no2_lower,
+            no2_upper=no2_upper,
+            o3_lower=o3_lower,
+            o3_upper=o3_upper,
             models=models,
         )
 
@@ -222,9 +256,17 @@ class EnsembleForecaster:
         upper: List[float],
         pm10_lower: List[float],
         pm10_upper: Optional[List[float]] = None,
+        no2: Optional[List[float]] = None,
+        o3: Optional[List[float]] = None,
+        so2: Optional[List[float]] = None,
+        co: Optional[List[float]] = None,
+        no2_lower: Optional[List[float]] = None,
+        no2_upper: Optional[List[float]] = None,
+        o3_lower: Optional[List[float]] = None,
+        o3_upper: Optional[List[float]] = None,
         models: Optional[Dict[str, bool]] = None,
     ) -> ForecastResult:
-        aqi, category, colors = self._aqi_series(pm25, pm10)
+        aqi, category, colors = self._aqi_series(pm25, pm10, no2, o3)
 
         return ForecastResult(
             station_id=station_id,
@@ -238,6 +280,14 @@ class EnsembleForecaster:
             upper=upper,
             pm10_lower=pm10_lower,
             pm10_upper=pm10_upper or [],
+            no2=no2 or [],
+            o3=o3 or [],
+            so2=so2 or [],
+            co=co or [],
+            no2_lower=no2_lower or [],
+            no2_upper=no2_upper or [],
+            o3_lower=o3_lower or [],
+            o3_upper=o3_upper or [],
             models=models or {},
             generated_at=datetime.now(timezone.utc).isoformat(),
         )
@@ -246,14 +296,26 @@ class EnsembleForecaster:
         self,
         pm25: List[float],
         pm10: List[float],
+        no2: Optional[List[float]] = None,
+        o3: Optional[List[float]] = None,
     ) -> tuple:
-        """Map hourly PM arrays to NAQI series."""
+        """Map hourly pollutant arrays to 4-pollutant NAQI series.
+
+        Matches the research-daily path (pm25/pm10/no2/o3); the old
+        2-pollutant version could understate AQI on NO2/O3-driven hours.
+        """
         aqi, category, colors = [], [], []
-        for p25, p10 in zip(pm25, pm10):
-            result = self.naqi.calculate_naqi({
-                "pm25": p25,
-                "pm10": p10,
-            })
+        n = len(pm25)
+        for i in range(n):
+            payload = {
+                "pm25": pm25[i],
+                "pm10": pm10[i] if i < len(pm10) else None,
+            }
+            if no2 and i < len(no2) and no2[i]:
+                payload["no2"] = no2[i]
+            if o3 and i < len(o3) and o3[i]:
+                payload["o3"] = o3[i]
+            result = self.naqi.calculate_naqi(payload)
             aqi.append(result.overall_aqi)
             category.append(result.category)
             colors.append(result.color)
@@ -294,6 +356,10 @@ class EnsembleForecaster:
         fire_contribution: float = 0.0,
         features: Optional[Dict] = None,
         pm10_ratio: float = 1.35,
+        current_no2: Optional[float] = None,
+        current_o3: Optional[float] = None,
+        current_so2: Optional[float] = None,
+        current_co: Optional[float] = None,
     ) -> Dict[str, Any]:
         """Construct a canonical forecast context dict for a station."""
         return {
@@ -307,4 +373,8 @@ class EnsembleForecaster:
             "fire_contribution": fire_contribution,
             "features": features,
             "pm10_ratio": pm10_ratio,
+            "current_no2": current_no2,
+            "current_o3": current_o3,
+            "current_so2": current_so2,
+            "current_co": current_co,
         }

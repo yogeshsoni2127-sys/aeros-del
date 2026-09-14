@@ -32,6 +32,9 @@ class Settings:
     maptiler_key: Optional[str] = None
     carto_key: Optional[str] = None
     datagov_api_key: Optional[str] = None
+    # Shared secret for the TFT-overlay ingest endpoint (CI/local runner
+    # POSTs daily 3-model forecasts). Unset = endpoint returns 503.
+    ingest_key: Optional[str] = None
 
     # ── Server ────────────────────────────────────────────────────────
     host: str = "0.0.0.0"
@@ -109,6 +112,7 @@ class Settings:
             carto_key=os.getenv("CARTO_KEY") or os.getenv("CARTO_API_KEY"),
             datagov_api_key=(os.getenv("DATAGOV_API_KEY")
                              or os.getenv("CPCB_DATAGOV_KEY")),
+            ingest_key=os.getenv("INGEST_KEY"),
             host=os.getenv("HOST", "0.0.0.0"),
             port=int(os.getenv("PORT", "8000")),
             debug=os.getenv("DEBUG", "false").lower() == "true",

@@ -32,6 +32,8 @@
           maptilerKey: cfg.maptiler_key || null,
           cartoKey: cfg.carto_key || null,
         };
+        // Refresh cadence for the "after what time values update" readout.
+        this.state.refreshIntervalS = cfg.refresh_interval_s || null;
       } catch (e) {
         console.warn('config fetch failed — using default basemap', e);
       }
@@ -224,6 +226,11 @@
           txt += ` · ${nFresh} fresh`;
           if (nStale) txt += ` · ⚠ ${nStale} stale`;
         }
+        // Pipeline cadence: station values refresh at most this often
+        // (upstream lag can still make individual stations older — see
+        // per-station age in the list below).
+        const cad = this.state.refreshIntervalS;
+        if (cad) txt += ` · refresh ${cad >= 60 ? Math.round(cad / 60) + 'm' : cad + 's'}`;
         upd.textContent = txt;
       }
       const ms = document.getElementById('mapStatus');
@@ -310,12 +317,16 @@
           const color = Utils.stationDisplayColor(cur.color || '#808080');
           const err = ls != null ? ls.error : null;
           const errColor = err == null ? 'var(--text-dim)' : (Math.abs(err) < 15 ? 'var(--toxic)' : (Math.abs(err) < 40 ? 'var(--amber)' : 'var(--danger)'));
+          const errTitle = ls != null
+            ? `actual ${ls.actual} vs predicted ${ls.predicted} (${ls.model || 'baseline'} H+${ls.horizon_h || 1})`
+            : (s.last_step_null_reason
+               ? `no error yet: ${s.last_step_null_reason}` : 'no error yet');
           return `
             <div class="stable-row" style="--row-color:${color}" data-id="${Utils.esc(s.station_id)}">
               <span class="nm">${Utils.esc(s.short_name || s.station_id)}</span>
               <span class="v" style="color:${color}">${cur.aqi != null ? cur.aqi : '—'}</span>
               <span class="v" style="color:var(--text-mid)">${h24.aqi != null ? h24.aqi : '—'}</span>
-              <span class="v" style="color:${errColor}">${err != null ? (err > 0 ? '+' : '') + err : '—'}</span>
+              <span class="v" title="${Utils.esc(errTitle)}" style="color:${errColor}">${err != null ? (err > 0 ? '+' : '') + err : '—'}</span>
             </div>`;
         }).join('');
         listEl.querySelectorAll('.stable-row').forEach((row) => {
@@ -587,6 +598,25 @@
       }
 
       drawSparkline(document.getElementById('aisiSpark'), aisi.history || [], color);
+
+      // One-shot independent cross-check (Wyoming VIDP sonde vs model
+      // gradient). Cached per page load — the endpoint fetches an
+      // external sounding and must not run on every snapshot.
+      if (!this._aisiVerifyLoaded) {
+        this._aisiVerifyLoaded = true;
+        Utils.fetchJSON('/api/v1/aisi/verify').then((v) => {
+          const el = document.getElementById('aisiVerifyResult');
+          if (!el) return;
+          if (v && v.sounding) {
+            el.textContent = ` · sonde ${v.sounding.cycle || ''} Δ${v.delta_gradient} K/100m → ${v.verdict}`;
+          } else {
+            el.textContent = ' · sonde offline (links above)';
+          }
+        }).catch(() => {
+          const el = document.getElementById('aisiVerifyResult');
+          if (el) el.textContent = ' · sonde offline (links above)';
+        });
+      }
 
       // Screen pulse on extreme inversion
       if (a.threshold_warning) {

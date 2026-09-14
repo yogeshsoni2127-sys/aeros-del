@@ -36,7 +36,6 @@ from backend.physics.emission_processor import EmissionProcessor
 from backend.ml.feature_engineering import FeatureEngineer
 from backend.ml.ensemble import EnsembleForecaster, ForecastResult
 from backend.ml.research_daily import ResearchDailyEnsemble
-from backend.ml.xgboost_forecaster import _delhi_diurnal_factor
 
 from backend.nlp.alert_generator import AlertGenerator
 from backend.nlp.severity_classifier import SeverityClassifier
@@ -479,6 +478,10 @@ class AQIService:
                 fire_contribution=fire_contrib,
                 features=features,
                 pm10_ratio=pm10_ratio,
+                current_no2=pollutants.get("no2"),
+                current_o3=pollutants.get("o3"),
+                current_so2=pollutants.get("so2"),
+                current_co=pollutants.get("co"),
             )
             contexts.append(ctx)
 
@@ -496,6 +499,10 @@ class AQIService:
         # Research-daily ML (fresh, live-seeded) wins over both baseline
         # and the frozen exporter overlay wherever it succeeds.
         await self._safe(self._apply_research_daily())
+
+        # MOS bias correction (damped, per-station Day+1 residuals):
+        # pulls H+24 toward observed error without touching curve shape.
+        await self._safe(self._apply_mos_correction())
 
         # Spatial forecast grid overlay (from state so the real-model
         # overlay is reflected on the map, not just the live ensemble).
@@ -537,42 +544,104 @@ class AQIService:
         if not overlay:
             return
         for sid, payload in overlay.items():
+            shaped = self._shape_overlay_forecast(payload)
+            if shaped is not None:
+                self.state["forecasts"][sid] = shaped
+
+    @staticmethod
+    def _shape_overlay_forecast(payload: Dict[str, Any]
+                                ) -> Optional[Dict[str, Any]]:
+        """Shape one exporter/ingest payload into a state forecast dict.
+
+        Shared by the frozen-file overlay and the TFT ingest endpoint so
+        both paths serve identical structures. Returns None when the
+        payload fails validation (never raises).
+        """
+        try:
+            ts = payload.get("timestamps", [])
+            pm25 = [float(v) for v in payload.get("pm25", [])]
+            pm10 = [float(v) for v in payload.get("pm10", [])]
+            if len(ts) != 72 or len(pm25) != 72 or len(pm10) != 72:
+                return None
+            aqi = [float(v) for v in payload.get("aqi", [])]
+            if len(aqi) != 72:
+                return None
+            return {
+                **ForecastResult(
+                    station_id=payload.get("station_id", "unknown"),
+                    timestamps=list(ts),
+                    pm25=pm25,
+                    pm10=pm10,
+                    aqi=aqi,
+                    category=list(payload.get("category", [])),
+                    colors=list(payload.get("colors", [])),
+                    lower=[float(v) for v in payload.get("lower", [])],
+                    upper=[float(v) for v in payload.get("upper", [])],
+                    pm10_lower=[float(v) for v in payload.get("pm10_lower", [])],
+                    pm10_upper=[float(v) for v in payload.get("pm10_upper", [])],
+                    dominant_pollutant=payload.get("daily", [{}])[0].get(
+                        "dominant_pollutant", "pm25"),
+                    models=dict(payload.get("models", {})),
+                    generated_at=payload.get("generated_at", ""),
+                ).to_dict(),
+                # Extras pass through to station-detail + accuracy table.
+                "no2": payload.get("no2", []),
+                "o3": payload.get("o3", []),
+                "lower": payload.get("lower", []),
+                "upper": payload.get("upper", []),
+                "pm10_lower": payload.get("pm10_lower", []),
+                "pm10_upper": payload.get("pm10_upper", []),
+                "no2_lower": payload.get("no2_lower", []),
+                "no2_upper": payload.get("no2_upper", []),
+                "o3_lower": payload.get("o3_lower", []),
+                "o3_upper": payload.get("o3_upper", []),
+                "daily": payload.get("daily", []),
+                "blend_used": payload.get("blend_used", {}),
+                "provenance": payload.get(
+                    "provenance",
+                    "sih-p2 ensemble (daily model, hourly downscaled)"),
+            }
+        except Exception as e:
+            logger.debug("Overlay shaping failed: %s", e)
+            return None
+
+    @staticmethod
+    def _overlay_is_fresh_tft(fc: Dict[str, Any], max_age_h: float = 60.0
+                              ) -> bool:
+        """True when a served forecast is a fresh ingested TFT overlay.
+
+        Research-daily skips these stations (TFT overlay wins); tree-only
+        research fills everything else.
+        """
+        try:
+            if not (fc.get("models") or {}).get("tft"):
+                return False
+            gen = datetime.fromisoformat(
+                str(fc.get("generated_at") or ""))
+            if gen.tzinfo is None:
+                gen = gen.replace(tzinfo=timezone.utc)
+            age_h = (datetime.now(timezone.utc) - gen).total_seconds() / 3600.0
+            return 0 <= age_h <= max_age_h
+        except (ValueError, TypeError):
+            return False
+
+    def tft_overlay_age_h(self) -> Optional[float]:
+        """Min age of served fresh TFT overlays (None when absent)."""
+        ages = []
+        now = datetime.now(timezone.utc)
+        for fc in (self.state.get("forecasts") or {}).values():
             try:
-                self.state["forecasts"][sid] = {
-                    **ForecastResult(
-                        station_id=sid,
-                        timestamps=payload["timestamps"],
-                        pm25=[float(v) for v in payload["pm25"]],
-                        pm10=[float(v) for v in payload["pm10"]],
-                        aqi=[float(v) for v in payload["aqi"]],
-                        category=list(payload["category"]),
-                        colors=list(payload["colors"]),
-                        lower=[float(v) for v in payload.get("lower", [])],
-                        upper=[float(v) for v in payload.get("upper", [])],
-                        pm10_lower=[float(v) for v in payload.get("pm10_lower", [])],
-                        pm10_upper=[float(v) for v in payload.get("pm10_upper", [])],
-                        dominant_pollutant=payload.get("daily", [{}])[0].get(
-                            "dominant_pollutant", "pm25"),
-                        models=dict(payload.get("models", {})),
-                        generated_at=payload.get("generated_at", ""),
-                    ).to_dict(),
-                    # Extras pass through to station-detail + accuracy table.
-                    "no2": payload.get("no2", []),
-                    "o3": payload.get("o3", []),
-                    "lower": payload.get("lower", []),
-                    "upper": payload.get("upper", []),
-                    "pm10_lower": payload.get("pm10_lower", []),
-                    "pm10_upper": payload.get("pm10_upper", []),
-                    "no2_lower": payload.get("no2_lower", []),
-                    "no2_upper": payload.get("no2_upper", []),
-                    "o3_lower": payload.get("o3_lower", []),
-                    "o3_upper": payload.get("o3_upper", []),
-                    "daily": payload.get("daily", []),
-                    "blend_used": payload.get("blend_used", {}),
-                    "provenance": "sih-p2 ensemble (daily model, hourly downscaled)",
-                }
-            except Exception as e:
-                logger.debug("Overlay failed for %s: %s", sid, e)
+                if not (fc.get("models") or {}).get("tft"):
+                    continue
+                gen = datetime.fromisoformat(
+                    str(fc.get("generated_at") or ""))
+                if gen.tzinfo is None:
+                    gen = gen.replace(tzinfo=timezone.utc)
+                ages.append((now - gen).total_seconds() / 3600.0)
+            except (ValueError, TypeError):
+                continue
+        ages = [a for a in ages if a >= 0]
+        return round(min(ages), 1) if ages else None
 
     MIN_RAM_GB_FOR_TFT = 1.5
 
@@ -734,58 +803,9 @@ class AQIService:
         live_tails = await self._safe(
             self.preprocessor.get_daily_means(days=60)) or {}
         wx_days = self._wx_days_for_research(horizon_dates)
-        inputs = {}
-        for station in self.state.get("stations", []):
-            current = station.get("current") or {}
-            pol = current.get("pollutants", {})
-            if pol.get("pm25") is None:
-                continue
-            sid = station["id"]
-            if sid not in self._research_locmap:
-                self._research_locmap[sid] = bridge.map_station(
-                    station.get("short_name", ""), station.get("name", ""),
-                    station.get("latitude", 0.0),
-                    station.get("longitude", 0.0))
-            loc = self._research_locmap[sid]
-            if not loc:
-                continue
-            seed_rows = bridge.seed.get(loc, [])
-            if not seed_rows:
-                continue
-            recent, tail_src = self._live_seeded_tails(
-                bridge, loc, seed_rows, live_tails.get(sid, {}), today)
-            fire_hist = {
-                "regional_fire_count": [
-                    r["regional_fire_count"] for r in seed_rows[-30:]
-                    if r.get("regional_fire_count") is not None],
-                "regional_total_frp": [
-                    r["regional_total_frp"] for r in seed_rows[-30:]
-                    if r.get("regional_total_frp") is not None],
-            }
-            reg = {c: (sum(v[-7:]) / len(v[-7:]) if v else 0.0)
-                   for c, v in (("regional_fire_count",
-                                 fire_hist["regional_fire_count"]),
-                                ("regional_total_frp",
-                                 fire_hist["regional_total_frp"]),
-                                ("regional_max_frp", []))}
-            fire_today = {"local_fire_count": 0.0, "local_total_frp": 0.0,
-                          "local_max_frp": 0.0, **reg}
-            meta = bridge.loc_meta.get(loc, {})
-            inputs[sid] = {
-                "location": loc,
-                "recent": recent,
-                "tail_src": tail_src,
-                "fire_hist": fire_hist,
-                "fire_today": fire_today,
-                "wx_days": wx_days,
-                "base_static": {
-                    "location_name": loc,
-                    "latitude": meta.get("latitude", 0.0),
-                    "longitude": meta.get("longitude", 0.0),
-                    "station_id": meta.get("station_id", -1)},
-                "hist_days": self._hist_days_for_tft(
-                    bridge, loc, seed_rows, live_tails.get(sid, {})),
-            }
+        inputs = self._research_station_inputs(
+            self.state.get("stations", []), live_tails, today,
+            horizon_dates, wx_days)
         if not inputs:
             return
         try:
@@ -794,8 +814,15 @@ class AQIService:
             logger.warning("research-daily domain inference failed: %s", e)
             return
         applied, day1_rows = 0, []
+        skipped_tft = 0
         for sid, out in results.items():
             if not out["preds"].get("pm25") or len(out["preds"]["pm25"]) < 3:
+                continue
+            # Precedence: a fresh ingested TFT overlay wins over local
+            # tree-only research; research fills everything else.
+            if self._overlay_is_fresh_tft(
+                    self.state.get("forecasts", {}).get(sid, {})):
+                skipped_tft += 1
                 continue
             if self._overwrite_with_research(
                     sid, out, horizon_dates,
@@ -823,9 +850,11 @@ class AQIService:
             if (s.get("current") or {}).get("pollutants", {}).get("pm25")
             is not None and not self._research_locmap.get(s["id"]))
         logger.info("research-daily: %d/%d live stations overwritten "
-                    "(live-seeded ML)%s",
+                    "(live-seeded ML)%s%s",
                     applied, with_current,
-                    f"; unmapped: {unmapped}" if unmapped else "")
+                    f"; unmapped: {unmapped}" if unmapped else "",
+                    f"; {skipped_tft} kept fresh TFT overlay"
+                    if skipped_tft else "")
         self.state["research_daily_n"] = applied
         try:
             import resource
@@ -873,6 +902,104 @@ class AQIService:
                 elif v is not None:
                     slot["pollutants"][t] = v
         return [by_date[d] for d in sorted(by_date)]
+
+    def _research_station_inputs(self, stations, live_tails, today,
+                                   horizon_dates, wx_days):
+        """Build research-daily domain inputs (shared by the live refresh
+        and the standalone CI/local runner script)."""
+        bridge = getattr(self, "research_daily", None)
+        inputs = {}
+        for station in stations or []:
+            current = station.get("current") or {}
+            pol = current.get("pollutants", {})
+            if pol.get("pm25") is None:
+                continue
+            sid = station["id"]
+            if sid not in self._research_locmap:
+                self._research_locmap[sid] = bridge.map_station(
+                    station.get("short_name", ""), station.get("name", ""),
+                    station.get("latitude", 0.0),
+                    station.get("longitude", 0.0))
+            loc = self._research_locmap[sid]
+            if not loc:
+                continue
+            seed_rows = bridge.seed.get(loc, [])
+            if not seed_rows:
+                continue
+            recent, tail_src = self._live_seeded_tails(
+                bridge, loc, seed_rows, (live_tails or {}).get(sid, {}),
+                today)
+            fire_hist = {
+                "regional_fire_count": [
+                    r["regional_fire_count"] for r in seed_rows[-30:]
+                    if r.get("regional_fire_count") is not None],
+                "regional_total_frp": [
+                    r["regional_total_frp"] for r in seed_rows[-30:]
+                    if r.get("regional_total_frp") is not None],
+            }
+            reg = {c: (sum(v[-7:]) / len(v[-7:]) if v else 0.0)
+                   for c, v in (("regional_fire_count",
+                                 fire_hist["regional_fire_count"]),
+                                ("regional_total_frp",
+                                 fire_hist["regional_total_frp"]),
+                                ("regional_max_frp", []))}
+            fire_today = {"local_fire_count": 0.0, "local_total_frp": 0.0,
+                          "local_max_frp": 0.0, **reg}
+            meta = bridge.loc_meta.get(loc, {})
+            inputs[sid] = {
+                "location": loc,
+                "recent": recent,
+                "tail_src": tail_src,
+                "fire_hist": fire_hist,
+                "fire_today": fire_today,
+                "wx_days": wx_days,
+                "base_static": {
+                    "location_name": loc,
+                    "latitude": meta.get("latitude", 0.0),
+                    "longitude": meta.get("longitude", 0.0),
+                    "station_id": meta.get("station_id", -1)},
+                "hist_days": self._hist_days_for_tft(
+                    bridge, loc, seed_rows,
+                    (live_tails or {}).get(sid, {})),
+            }
+        return inputs
+
+    def _wrap_research_payload(self, sid, out, horizon_dates, tail_src,
+                               provenance=None):
+        """Shape domain-inference output into an overlay-format payload
+        (shared by live state overwrite and the standalone runner)."""
+        from backend.ml.research_daily import downscale_daily_to_hourly
+        p = out["preds"]
+        curve = downscale_daily_to_hourly(
+            p, out.get("rmses", {}), self.naqi,
+            horizon_dates=horizon_dates)
+        if not any(v is not None for v in curve["pm25"]):
+            return None
+        tft_on = bool(out.get("tft_used"))
+        suffix = "" if tft_on else " (tree-only)"
+        blends = {t: (out.get("blends", {}).get(t, "") + suffix)
+                  for t in p if t in ("pm25", "pm10", "no2", "o3")}
+        members = {"tft": tft_on, "xgboost": True, "lightgbm": True}
+        if provenance is None:
+            provenance = (
+                "research daily xgb+lgbm+tft (CSV-trained, "
+                if tft_on else
+                "research daily xgb+lgbm (CSV-trained, tree-only, "
+            ) + f"{tail_src}) + diurnal downscale"
+        dom = self.naqi.calculate_naqi(
+            {"pm25": p["pm25"][0], "pm10": p["pm10"][0],
+             "no2": (p.get("no2") or [None])[0],
+             "o3": (p.get("o3") or [None])[0]}).dominant_pollutant
+        return {
+            "station_id": sid,
+            **curve,
+            "dominant_pollutant": dom,
+            "models": members,
+            "daily": curve["daily"],
+            "blend_used": blends,
+            "provenance": provenance,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+        }
 
     def _live_seeded_tails(self, bridge, loc, seed_rows, live_days, today):
         """Seed 14d tails extended with live SQLite daily means.
@@ -924,128 +1051,135 @@ class AQIService:
             src += f" (today {today_count}h)"
         return recent, src
 
+    async def _apply_mos_correction(self) -> None:
+        """MOS bias correction of served 72h curves (sharpens H+24).
+
+        Uses per-station Day+1 signed residuals (pred - actual, IST days,
+        >=3 pairs) from persisted research-daily predictions: each
+        station's curve shifts by damped -0.5 * bias on Day-1,
+        tapering to -0.25 / -0.125 on Day-2/3. Shape is untouched, bands
+        shift rigidly (BAND check preserved), daily[] means move with
+        their blocks (DAILY check preserved), and AQI is recomputed from
+        all four pollutants. No-op until enough scored pairs exist, so a
+        fresh deploy behaves exactly as before.
+        """
+        bias_map = await self.preprocessor.get_station_daily_bias(days=14)
+        applied: Dict[str, Dict] = {}
+        if not bias_map:
+            self.state["mos_corrections"] = applied
+            return
+        for sid, fc in (self.state.get("forecasts") or {}).items():
+            station_bias = bias_map.get(sid)
+            if not station_bias:
+                continue
+            pm25 = fc.get("pm25") or []
+            if len(pm25) != 72:
+                continue
+            corrections = {}
+            for target in ("pm25", "pm10"):
+                entry = station_bias.get(target)
+                if not entry:
+                    continue
+                raw = -0.5 * float(entry["bias"])
+                day1 = (fc.get(target) or [])[:24]
+                day1 = [v for v in day1 if v is not None]
+                if not day1:
+                    continue
+                mean1 = sum(day1) / len(day1)
+                cap = min(0.30 * abs(mean1), 50.0)
+                corr = max(-cap, min(cap, raw))
+                if abs(corr) < 0.5:
+                    continue
+                corrections[target] = corr
+            if not corrections:
+                continue
+            # Uniform per-block shifts (tapered by day) + rigid band moves.
+            block_corr = {
+                target: [c, c * 0.5, c * 0.25]
+                for target, c in corrections.items()
+            }
+            for target, blocks in block_corr.items():
+                arr = fc.get(target) or []
+                for i in range(min(72, len(arr))):
+                    if arr[i] is not None:
+                        arr[i] = round(max(arr[i] + blocks[i // 24], 1.0), 1)
+                lo_key = "lower" if target == "pm25" else f"{target}_lower"
+                hi_key = "upper" if target == "pm25" else f"{target}_upper"
+                for key in (lo_key, hi_key):
+                    band = fc.get(key) or []
+                    for i in range(min(72, len(band))):
+                        if band[i] is not None:
+                            band[i] = round(max(band[i] + blocks[i // 24],
+                                               1.0), 1)
+            # daily[] follows its block mean shift exactly.
+            for day in fc.get("daily") or []:
+                try:
+                    h = int(day.get("horizon_h", 0)) - 1
+                except (TypeError, ValueError):
+                    continue
+                if 0 <= h < 3:
+                    for target, blocks in block_corr.items():
+                        if day.get(target) is not None:
+                            day[target] = round(day[target] + blocks[h], 1)
+            # Recompute AQI from all four pollutants on corrected hours.
+            try:
+                no2 = fc.get("no2") or []
+                o3 = fc.get("o3") or []
+                pm10 = fc.get("pm10") or []
+                aqi, cat, col = [], [], []
+                for i in range(72):
+                    payload = {"pm25": pm25[i],
+                               "pm10": pm10[i] if i < len(pm10) else None}
+                    if i < len(no2) and no2[i]:
+                        payload["no2"] = no2[i]
+                    if i < len(o3) and o3[i]:
+                        payload["o3"] = o3[i]
+                    r = self.naqi.calculate_naqi(payload)
+                    aqi.append(r.overall_aqi)
+                    cat.append(r.category)
+                    col.append(r.color)
+                fc["aqi"] = aqi
+                fc["category"] = cat
+                fc["colors"] = col
+                for day in fc.get("daily") or []:
+                    r = self.naqi.calculate_naqi({
+                        "pm25": day.get("pm25"), "pm10": day.get("pm10"),
+                        "no2": day.get("no2"), "o3": day.get("o3")})
+                    day["aqi"] = r.overall_aqi
+                    day["category"] = r.category
+                    day["color"] = r.color
+            except Exception as e:
+                logger.debug("MOS AQI rebuild failed for %s: %s", sid, e)
+            fc["provenance"] = (fc.get("provenance") or "") + " +MOS"
+            applied[sid] = {
+                target: {"day1_corr": round(blocks[0], 1),
+                         "n": station_bias[target]["n"]}
+                for target, blocks in block_corr.items()
+            }
+        self.state["mos_corrections"] = applied
+        if applied:
+            logger.info("MOS correction applied on %d stations", len(applied))
+
     def _overwrite_with_research(self, sid, out, horizon_dates, tail_src):
         """Disaggregate daily ML means onto a fresh 72h hourly curve."""
         fc = self.state.get("forecasts", {}).get(sid)
         if not fc:
             return False
-        import math
-        # Fresh timestamps (next full hour +72h): baseline/overlay stamps
-        # can be stale-dated, which would unmap every hour from Day+1..3.
-        start = datetime.now(timezone.utc).replace(
-            minute=0, second=0, microsecond=0) + timedelta(hours=1)
-        timestamps = [(start + timedelta(hours=i)).isoformat()
-                      for i in range(72)]
         p = out["preds"]
-        rms = out.get("rmses", {})
-        # Index blocks (like the exporter): block b (0/1/2) carries Day
-        # b+1's mean exactly (the chart verifier checks 24h index blocks,
-        # not IST dates). H+24 (index 23) therefore sits in Day+1.
-        hours = []
-        for ts in timestamps:
-            try:
-                d = datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
-                hours.append(d.hour)
-            except (ValueError, TypeError):
-                hours.append(12)
-
-        def _series(target):
-            daily = p.get(target) or []
-            vals = []
-            for i in range(len(timestamps)):
-                h = i // 24 + 1
-                if h > 3 or h - 1 >= len(daily) or daily[h - 1] is None:
-                    vals.append(None)
-                    continue
-                f = [_delhi_diurnal_factor(hours[j] % 24)
-                     for j in range(len(timestamps)) if j // 24 + 1 == h]
-                norm = (sum(f) / len(f)) if f else 1.0
-                vals.append(round(
-                    max(daily[h - 1] * _delhi_diurnal_factor(hours[i] % 24)
-                        / (norm or 1.0), 1.0), 1))
-            return vals
-
-        pm25 = _series("pm25")
-        pm10 = _series("pm10")
-        no2 = _series("no2")
-        o3 = _series("o3")
-        if not any(v is not None for v in pm25):
+        if not (p.get("pm25") or []) or len(p["pm25"]) < 3:
             return False
-        # Fill any date-unmatched hours with the baseline curve (keeps 72).
-        for arr, key in ((pm25, "pm25"), (pm10, "pm10")):
+        wrapped = self._wrap_research_payload(
+            sid, out, horizon_dates, tail_src)
+        if wrapped is None:
+            return False
+        # Fill any gaps with the baseline curve (keeps 72).
+        for arr, key in ((wrapped["pm25"], "pm25"),
+                         (wrapped["pm10"], "pm10")):
             base = fc.get(key) or []
             for i, v in enumerate(arr):
                 if v is None and i < len(base) and base[i] is not None:
                     arr[i] = base[i]
-        for arr in (no2, o3):
-            for i, v in enumerate(arr):
-                if v is None:
-                    arr[i] = 0.0
-
-        def _band(target, vals):
-            lo, hi = [], []
-            for i, v in enumerate(vals):
-                h = min(i // 24 + 1, 3)
-                r = (rms.get(target) or [0.0, 0.0, 0.0])[h - 1] or 0.0
-                if r <= 0:
-                    r = max(v * 0.15, 5.0)
-                lo.append(round(max(v - 1.28 * r, 2.0), 1))
-                hi.append(round(v + 1.28 * r, 1))
-            return lo, hi
-
-        lower, upper = _band("pm25", pm25)
-        pm10_lower, pm10_upper = _band("pm10", pm10)
-        no2_lower, no2_upper = _band("no2", no2)
-        o3_lower, o3_upper = _band("o3", o3)
-
-        aqi, category, colors = [], [], []
-        for a, b, c, d in zip(pm25, pm10, no2, o3):
-            r = self.naqi.calculate_naqi(
-                {"pm25": a, "pm10": b, "no2": c, "o3": d})
-            aqi.append(r.overall_aqi)
-            category.append(r.category)
-            colors.append(r.color)
-        dom = self.naqi.calculate_naqi(
-            {"pm25": p["pm25"][0], "pm10": p["pm10"][0],
-             "no2": (p.get("no2") or [None])[0],
-             "o3": (p.get("o3") or [None])[0]}).dominant_pollutant
-
-        daily = []
-        for h, fdate in enumerate(horizon_dates, 1):
-            r = self.naqi.calculate_naqi({
-                "pm25": p["pm25"][h - 1], "pm10": p["pm10"][h - 1],
-                "no2": (p.get("no2") or [None] * 3)[h - 1],
-                "o3": (p.get("o3") or [None] * 3)[h - 1]})
-            daily.append({"date": fdate.isoformat(), "horizon_h": h,
-                          "pm25": p["pm25"][h - 1], "pm10": p["pm10"][h - 1],
-                          "no2": (p.get("no2") or [None] * 3)[h - 1],
-                          "o3": (p.get("o3") or [None] * 3)[h - 1],
-                          "aqi": r.overall_aqi, "category": r.category,
-                          "color": r.color,
-                          "dominant_pollutant": r.dominant_pollutant})
-        blends = {t: (out.get("blends", {}).get(t, "") + " (tree-only)")
-                  for t in p if t in ("pm25", "pm10", "no2", "o3")}
-        tft_on = bool(out.get("tft_used"))
-        members = {"tft": tft_on, "xgboost": True, "lightgbm": True}
-        prov = ("research daily xgb+lgbm+tft (CSV-trained, "
-                if tft_on else
-                "research daily xgb+lgbm (CSV-trained, tree-only, "
-                ) + f"{tail_src}) + diurnal downscale"
-        self.state["forecasts"][sid] = {
-            **fc,
-            "timestamps": timestamps,
-            "pm25": pm25, "pm10": pm10, "no2": no2, "o3": o3,
-            "aqi": aqi, "category": category, "colors": colors,
-            "lower": lower, "upper": upper,
-            "pm10_lower": pm10_lower, "pm10_upper": pm10_upper,
-            "no2_lower": no2_lower, "no2_upper": no2_upper,
-            "o3_lower": o3_lower, "o3_upper": o3_upper,
-            "dominant_pollutant": dom,
-            "models": members,
-            "daily": daily, "blend_used": blends,
-            "provenance": prov,
-            "generated_at": datetime.now(timezone.utc).isoformat(),
-        }
+        self.state["forecasts"][sid] = {**fc, **wrapped}
         return True
 
     async def _generate_alerts(self):

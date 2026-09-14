@@ -59,6 +59,112 @@ def _mean_last(vals: list, n: int) -> float:
     return (sum(v) / len(v)) if v else 0.0
 
 
+def downscale_daily_to_hourly(preds, rmses, naqi, start=None,
+                                horizon_dates=None):
+    """Pin Delhi-diurnal hourly shape to Day+1/2/3 means (index blocks).
+
+    preds: {target: [d1, d2, d3]} calibrated daily means.
+    rmses: {target: [r1, r2, r3]} horizon uncertainties.
+    naqi: NAQICalculator (or compatible with calculate_naqi).
+    start: next-full-hour datetime (UTC); defaults to now.
+    Returns dict with timestamps/pm25/pm10/no2/o3, bands, aqi/category/
+    colors and daily[] — the same arrays the dashboard chart verifies
+    (24h index-block means == daily values, tolerance 0.15).
+    """
+    from datetime import datetime, timedelta, timezone
+    from backend.ml.xgboost_forecaster import gas_diurnal_factor
+
+    if start is None:
+        now = datetime.now(timezone.utc)
+        start = now.replace(minute=0, second=0, microsecond=0) \
+            + timedelta(hours=1)
+    timestamps = [(start + timedelta(hours=i)).isoformat()
+                  for i in range(72)]
+    hours = []
+    for ts in timestamps:
+        try:
+            hours.append(datetime.fromisoformat(
+                str(ts).replace("Z", "+00:00")).hour)
+        except (ValueError, TypeError):
+            hours.append(12)
+
+    def _series(target):
+        daily = preds.get(target) or []
+        vals = []
+        for i in range(72):
+            h = i // 24 + 1
+            if h > 3 or h - 1 >= len(daily) or daily[h - 1] is None:
+                vals.append(None)
+                continue
+            # Per-pollutant shape: NO2 twin traffic peaks, O3 afternoon
+            # photochemical peak — never the PM curve for gases.
+            f = [gas_diurnal_factor(target, hours[j] % 24)
+                 for j in range(72) if j // 24 + 1 == h]
+            norm = (sum(f) / len(f)) if f else 1.0
+            vals.append(round(max(
+                daily[h - 1] * gas_diurnal_factor(target, hours[i] % 24)
+                / (norm or 1.0), 1.0), 1))
+        return vals
+
+    def _band(target, vals):
+        lo, hi = [], []
+        for i, v in enumerate(vals):
+            h = min(i // 24 + 1, 3)
+            r = (rmses.get(target) or [0.0, 0.0, 0.0])[h - 1] or 0.0
+            if r <= 0:
+                r = max((v or 0) * 0.15, 5.0)
+            lo.append(round(max((v or 0) - 1.28 * r, 2.0), 1))
+            hi.append(round((v or 0) + 1.28 * r, 1))
+        return lo, hi
+
+    pm25, pm10 = _series("pm25"), _series("pm10")
+    no2 = _series("no2")
+    o3 = _series("o3")
+    lower, upper = _band("pm25", pm25)
+    pm10_lower, pm10_upper = _band("pm10", pm10)
+    no2_lower, no2_upper = _band("no2", no2)
+    o3_lower, o3_upper = _band("o3", o3)
+    for arr in (no2, o3):
+        for i, v in enumerate(arr):
+            if v is None:
+                arr[i] = 0.0
+    aqi, category, colors = [], [], []
+    for a, b, c, d in zip(pm25, pm10, no2, o3):
+        r = naqi.calculate_naqi(
+            {"pm25": a, "pm10": b, "no2": c, "o3": d})
+        aqi.append(r.overall_aqi)
+        category.append(r.category)
+        colors.append(r.color)
+    daily = []
+    for h in (1, 2, 3):
+        r = naqi.calculate_naqi({
+            "pm25": (preds.get("pm25") or [None] * 3)[h - 1],
+            "pm10": (preds.get("pm10") or [None] * 3)[h - 1],
+            "no2": (preds.get("no2") or [None] * 3)[h - 1],
+            "o3": (preds.get("o3") or [None] * 3)[h - 1]})
+        entry = {"horizon_h": h,
+                 "pm25": (preds.get("pm25") or [None] * 3)[h - 1],
+                 "pm10": (preds.get("pm10") or [None] * 3)[h - 1],
+                 "no2": (preds.get("no2") or [None] * 3)[h - 1],
+                 "o3": (preds.get("o3") or [None] * 3)[h - 1],
+                 "aqi": r.overall_aqi, "category": r.category,
+                 "color": r.color,
+                 "dominant_pollutant": r.dominant_pollutant}
+        if horizon_dates and h - 1 < len(horizon_dates):
+            try:
+                entry["date"] = horizon_dates[h - 1].isoformat()
+            except AttributeError:
+                entry["date"] = str(horizon_dates[h - 1])
+        daily.append(entry)
+    return {"timestamps": timestamps, "pm25": pm25, "pm10": pm10,
+            "no2": no2, "o3": o3, "lower": lower, "upper": upper,
+            "pm10_lower": pm10_lower, "pm10_upper": pm10_upper,
+            "no2_lower": no2_lower, "no2_upper": no2_upper,
+            "o3_lower": o3_lower, "o3_upper": o3_upper,
+            "aqi": aqi, "category": category, "colors": colors,
+            "daily": daily}
+
+
 def _tails_upto(hist: list, end) -> Dict[str, list]:
     tails = {t: [] for t in _POL_KEYS}
     for d in hist:

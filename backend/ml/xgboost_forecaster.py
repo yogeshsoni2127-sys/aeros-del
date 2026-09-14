@@ -40,18 +40,25 @@ def statistical_baseline(
     fire_contribution: float = 0.0,
     horizon: int = 72,
     pm10_ratio: float = 1.35,
+    current_no2: Optional[float] = None,
+    current_o3: Optional[float] = None,
+    current_so2: Optional[float] = None,
+    current_co: Optional[float] = None,
 ) -> Dict[str, List[float]]:
     """
     Physics-aware statistical baseline forecast (no ML weights needed).
 
     Combines:
     - Persistence of current concentration
-    - A diurnal modulation curve (Delhi PM2.5: min ~16h, peak ~09h/23h)
+    - Per-pollutant diurnal modulation curves (Delhi PM2.5: min ~16h,
+      peak ~09h/23h; NO2 twin traffic peaks; O3 afternoon photochemical
+      peak; SO2/CO flatter)
     - Regime decay modulated by AISI (trapping) and PBL height
     - A growing uncertainty envelope with forecast horizon
 
     Returns:
-        Dict with pm25, pm10, lower, upper 72-element lists.
+        Dict with pm25, pm10, lower, upper 72-element lists plus
+        independent no2/o3/so2/co series with their own bands.
     """
     np_ = _ensure_numpy()
     history = [h for h in history_pm25 if h is not None]
@@ -90,8 +97,16 @@ def statistical_baseline(
 
     pm10_lower = [round(max(v * pm10_ratio * 0.72, 2.0), 1) for v in lower]
     pm10_upper = [round(v * pm10_ratio * 1.35, 1) for v in upper]
+
+    # Independent gas projections: each gas persists around its OWN
+    # current observation with its OWN diurnal shape (NOT the PM curve),
+    # so the NO2/O3 chart tabs stop mirroring PM2.5.
+    gas_out = project_gases(
+        current, decay, horizon, current_no2, current_o3,
+        current_so2, current_co)
+
     return {"pm25": pm25, "pm10": pm10, "lower": lower, "upper": upper,
-            "pm10_lower": pm10_lower, "pm10_upper": pm10_upper}
+            "pm10_lower": pm10_lower, "pm10_upper": pm10_upper, **gas_out}
 
 
 def _delhi_diurnal_factor(hour: int) -> float:
@@ -103,6 +118,111 @@ def _delhi_diurnal_factor(hour: int) -> float:
         0.92, 1.04, 1.14, 1.20, 1.22, 1.20,  # 18-23
     ]
     return curve[hour % 24]
+
+
+# Per-pollutant diurnal shapes (raw, normalized to mean 1.0 at load).
+# PM follows the observed Delhi haze cycle; NO2 follows traffic (twin
+# rush-hour peaks); O3 is photochemical (afternoon peak, dawn minimum);
+# SO2/CO are flatter industrial/domestic signals. Previously every gas
+# reused the PM curve, so all 72h chart tabs looked identical.
+_GAS_DIURNAL_RAW = {
+    "no2": [
+        1.05, 1.02, 0.98, 0.94, 0.90, 0.88,  # 00-05
+        0.92, 1.05, 1.20, 1.28, 1.18, 1.05,  # 06-11 (morning rush)
+        0.95, 0.88, 0.82, 0.80, 0.82, 0.90,  # 12-17 (midday dip)
+        1.05, 1.18, 1.25, 1.22, 1.15, 1.10,  # 18-23 (evening rush)
+    ],
+    "o3": [
+        0.55, 0.50, 0.48, 0.47, 0.48, 0.52,  # 00-05 (night titration)
+        0.60, 0.75, 0.95, 1.15, 1.32, 1.45,  # 06-11 (morning build)
+        1.55, 1.62, 1.65, 1.60, 1.48, 1.30,  # 12-17 (afternoon peak)
+        1.10, 0.92, 0.78, 0.68, 0.61, 0.57,  # 18-23 (evening decay)
+    ],
+    "so2": [
+        1.02, 1.00, 0.98, 0.97, 0.97, 0.98,  # 00-05
+        1.00, 1.04, 1.08, 1.10, 1.08, 1.05,  # 06-11
+        1.02, 0.99, 0.96, 0.94, 0.94, 0.96,  # 12-17
+        1.00, 1.04, 1.06, 1.05, 1.04, 1.03,  # 18-23
+    ],
+    "co": [
+        1.08, 1.05, 1.02, 0.99, 0.96, 0.94,  # 00-05
+        0.96, 1.04, 1.14, 1.18, 1.12, 1.04,  # 06-11
+        0.97, 0.91, 0.87, 0.86, 0.88, 0.94,  # 12-17
+        1.03, 1.11, 1.15, 1.14, 1.12, 1.10,  # 18-23
+    ],
+}
+_GAS_DIURNAL = {}
+for _gas, _shape in _GAS_DIURNAL_RAW.items():
+    _mean = sum(_shape) / len(_shape)
+    _GAS_DIURNAL[_gas] = [round(v / _mean, 4) for v in _shape]
+
+
+def gas_diurnal_factor(target: str, hour: int) -> float:
+    """Diurnal multiplier for one pollutant at one hour-of-day.
+
+    pm25/pm10 keep the legacy Delhi haze curve (validated behaviour,
+    untouched); gases use their own normalized shapes so the 72h tabs
+    no longer mirror PM.
+    """
+    t = (target or "").lower()
+    if t in ("pm25", "pm10"):
+        return _delhi_diurnal_factor(hour)
+    shape = _GAS_DIURNAL.get(t)
+    if shape:
+        return shape[int(hour) % 24]
+    return _delhi_diurnal_factor(hour)
+
+
+def project_gases(
+    current_pm25: float,
+    decay: float,
+    horizon: int,
+    current_no2: Optional[float] = None,
+    current_o3: Optional[float] = None,
+    current_so2: Optional[float] = None,
+    current_co: Optional[float] = None,
+) -> Dict[str, List[float]]:
+    """Independent per-gas hourly projections with own diurnal shapes.
+
+    Shared by the statistical baseline and the trained-model predict()
+    paths so every mode serves distinct NO2/O3/SO2/CO curves (never a
+    PM copy). See statistical_baseline for anchor/fallback semantics.
+    """
+    gas_anchors = {
+        "no2": (current_no2, 5.0, 800.0),
+        "o3": (current_o3, 5.0, 600.0),
+        "so2": (current_so2, 4.0, 1000.0),
+        "co": (current_co, 0.3, 50.0),
+    }
+    gas_out: Dict[str, List[float]] = {}
+    for gas, (obs, lo, hi) in gas_anchors.items():
+        if obs is not None and obs > 0:
+            anchor = float(obs)
+            estimated = False
+        else:
+            # Delhi-typical fallback ratios off PM2.5 (documented estimate).
+            fallback_ratio = {"no2": 0.32, "o3": None, "so2": 0.09,
+                              "co": 0.028}[gas]
+            anchor = 45.0 if gas == "o3" else max(current_pm25 * fallback_ratio,
+                                                  lo)
+            estimated = True
+        series, glo, ghi = [], [], []
+        for h in range(horizon):
+            hour_of_day = (datetime.now().hour + h) % 24
+            shape = gas_diurnal_factor(gas, hour_of_day)
+            nominal = max(min(anchor * (decay ** (h / 24.0)) * shape,
+                              hi), lo)
+            width = 1.5 if estimated else 1.0
+            sigma = width * (0.10 * anchor + 0.05 * anchor * math.sqrt(h + 1))
+            series.append(round(nominal, 2 if gas == "co" else 1))
+            glo.append(round(max(nominal - 1.28 * sigma, lo * 0.5),
+                             2 if gas == "co" else 1))
+            ghi.append(round(min(nominal + 1.28 * sigma, hi),
+                             2 if gas == "co" else 1))
+        gas_out[gas] = series
+        gas_out[f"{gas}_lower"] = glo
+        gas_out[f"{gas}_upper"] = ghi
+    return gas_out
 
 
 class XGBoostForecaster:
@@ -220,6 +340,10 @@ class XGBoostForecaster:
                 fire_contribution=fire,
                 horizon=horizon,
                 pm10_ratio=ratio,
+                current_no2=context.get("current_no2"),
+                current_o3=context.get("current_o3"),
+                current_so2=context.get("current_so2"),
+                current_co=context.get("current_co"),
             )
 
         # Iterative multi-step forecast using the trained model
@@ -231,9 +355,16 @@ class XGBoostForecaster:
         upper = [round(v * 1.35, 1) for v in base]
         pm10_lower = [round(max(v * 0.72, 2.0), 1) for v in lower]
         pm10_upper = [round(v * 1.35, 1) for v in upper]
+        aisi_gate = max(0.3, min(1.0, aisi / 8.0))
+        pbl_gate = max(0.3, min(1.0, pblh / 1000.0))
+        decay = 1.0 - 0.10 * (1.0 - aisi_gate) * (0.5 + 0.5 * pbl_gate)
+        gases = project_gases(
+            current, decay, horizon, context.get("current_no2"),
+            context.get("current_o3"), context.get("current_so2"),
+            context.get("current_co"))
 
         return {"pm25": pm25, "pm10": pm10, "lower": lower, "upper": upper,
-                "pm10_lower": pm10_lower, "pm10_upper": pm10_upper}
+                "pm10_lower": pm10_lower, "pm10_upper": pm10_upper, **gases}
 
     # ── Internals ────────────────────────────────────────────────────
 

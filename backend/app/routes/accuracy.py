@@ -231,7 +231,10 @@ async def model_status(request: Request):
                             ("lightgbm", getattr(ens, "lgbm", None))):
             members[key] = bool(getattr(member, "is_trained", False))
     members["baseline"] = not any(members.values())
-
+    try:
+        tft_overlay_age_h = service.tft_overlay_age_h()
+    except Exception:
+        tft_overlay_age_h = None
     training = _read_json("training_report.json")
     backfill = _read_json("backfill_report.json")
     ensemble_72h = _read_json("ensemble_skill.json")
@@ -250,6 +253,7 @@ async def model_status(request: Request):
         "ensemble_72h": ensemble_72h,
         "ensemble_72h_blends": members_72h,
         "real_overlay_n": service.state.get("real_overlay_n", 0),
+        "tft_overlay_age_h": tft_overlay_age_h,
     }
 
 
@@ -261,7 +265,9 @@ async def accuracy_stations(request: Request):
     station_id, short_name, zone, data_source, history_n,
     current {pm25, pm10, aqi, category, color},
     forecast_h24 {pm25, pm10, aqi, category},
-    last_step {actual, predicted, error, abs_error} or null.
+    last_step {actual, predicted, error, abs_error} or null (+
+    last_step_null_reason explaining the null: no-day1-pred-stored,
+    warming-up, no-pm25-in-history, ...).
     """
     service = _get_service(request)
     rows = []
@@ -294,6 +300,7 @@ async def accuracy_stations(request: Request):
             h24 = {}
         hist = s.get("history") or []
         last_step = None
+        null_reason = None
         try:
             dp = day1_pred_map.get(s["id"]) or {}
             if dp.get("pm25_pred") is not None:
@@ -320,8 +327,14 @@ async def accuracy_stations(request: Request):
                         "horizon_h": 24,
                         "model": "research-daily",
                     }
+                else:
+                    null_reason = (f"day1-pred exists but only "
+                                   f"{len(vals)}/3 readings today")
+            else:
+                null_reason = "no-day1-pred-stored"
         except Exception as e:
             logger.debug("day1 error failed for %s: %s", s["id"], e)
+            null_reason = "day1-check-failed"
         if last_step is None:
             try:
                 if len(hist) >= 2 and hist[-1].get("pm25") is not None:
@@ -348,8 +361,33 @@ async def accuracy_stations(request: Request):
                             "abs_error": round(abs(pred - actual), 1),
                             "horizon_h": h,
                         }
+                        null_reason = None
+                    else:
+                        null_reason = "no-prior-pm25-in-history"
+                elif len(hist) >= 2:
+                    # Latest reading has no PM2.5 (gas-only station cycle):
+                    # persistence on whatever PM2.5 history exists.
+                    vals = [h.get("pm25") for h in hist
+                            if h.get("pm25") is not None]
+                    if len(vals) >= 2:
+                        actual, pred = float(vals[-1]), float(vals[-2])
+                        last_step = {
+                            "actual": round(actual, 1),
+                            "predicted": round(pred, 1),
+                            "error": round(pred - actual, 1),
+                            "abs_error": round(abs(pred - actual), 1),
+                            "horizon_h": 1,
+                            "model": "persistence",
+                        }
+                        null_reason = None
+                    else:
+                        null_reason = "no-pm25-in-history"
+                else:
+                    null_reason = (f"warming-up "
+                                   f"({len(hist)} reading(s), need 2)")
             except Exception as e:
                 logger.debug("last-step error failed for %s: %s", s["id"], e)
+                null_reason = null_reason or "last-step-check-failed"
         rows.append({
             "station_id": s["id"],
             "short_name": s.get("short_name"),
@@ -373,6 +411,7 @@ async def accuracy_stations(request: Request):
             "blend_used": fc.get("blend_used", {}),
             "provenance": fc.get("provenance", "live ensemble"),
             "last_step": last_step,
+            "last_step_null_reason": null_reason,
         })
     # Worst-AQI first so the table reads like a leaderboard
     rows.sort(key=lambda r: -((r.get("current") or {}).get("aqi") or -1))
