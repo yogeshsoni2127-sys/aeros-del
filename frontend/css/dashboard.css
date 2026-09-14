@@ -342,6 +342,62 @@ body[data-basemap="dark"] #map .maplibregl-canvas {
   transition: background var(--dur-fast), box-shadow var(--dur-fast), transform var(--dur-fast) var(--ease-warp);
 }
 .toggle input:checked + .dot { background: var(--c); box-shadow: 0 0 8px color-mix(in srgb, var(--c) 60%, transparent); }
+/* Plume key: 3 dashed segments double as the contribution scale AND the
+   fire-vs-plume cue — plumes are dashed LINES (green #16A34A <4 / amber
+   #D97706 4–10 / red #DC2626 >10 µg/m³) while fires are solid DOT+halo
+   markers in brighter #ff3838. */
+.plume-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  width: 30px;
+  flex-shrink: 0;
+  transition: opacity var(--dur-fast), filter var(--dur-fast);
+}
+.plume-key i {
+  flex: 1 1 0;
+  height: 0;
+  border-top: 3px dashed var(--c);
+}
+.toggle input:not(:checked) ~ .plume-key { opacity: 0.25; filter: grayscale(0.8); }
+.plume-scale {
+  display: flex;
+  gap: 8px;
+  margin: -4px 0 2px 26px;
+  font-family: var(--font-data);
+  font-size: 11px;
+  color: var(--mute);
+}
+.plume-scale span { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.plume-scale i {
+  width: 8px; height: 8px;
+  border-radius: 2px;
+  background: var(--c);
+}
+.layer-toggles:has(#layPlumes:not(:checked)) .plume-scale { opacity: 0.35; }
+/* Stations "colored by AQI" wheel: conic sweep of the display-mapped AQI
+   colors. --c stays #16A34A as the glow-tint fallback. */
+.toggle .dot.dot-aqi {
+  background: conic-gradient(
+    #00e400 0 14.3%, #16A34A 14.3% 28.6%, #D97706 28.6% 42.9%,
+    #ff7e00 42.9% 57.2%, #ff0000 57.2% 71.5%, #99004c 71.5% 85.8%,
+    #7e0023 85.8% 100%
+  );
+}
+.toggle input:checked + .dot.dot-aqi {
+  background: conic-gradient(
+    #00e400 0 14.3%, #16A34A 14.3% 28.6%, #D97706 28.6% 42.9%,
+    #ff7e00 42.9% 57.2%, #ff0000 57.2% 71.5%, #99004c 71.5% 85.8%,
+    #7e0023 85.8% 100%
+  );
+}
+.toggle input:not(:checked) + .dot.dot-aqi { background: #5a544d; box-shadow: none; }
+.toggle-sub {
+  font-size: 11px;
+  color: var(--mute);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
 /* Heat metric segmented */
 .heat-metric-row { display: flex; gap: 2px; margin-top: 2px; background: var(--canvas); border: 1px solid var(--hairline); border-radius: var(--radius-sm); padding: 2px; }
 .heat-metric-row button {

@@ -112,8 +112,13 @@
               <button data-heat-metric="o3">O₃</button>
             </div>
             <label class="toggle" title="Active fire / ash hotspots — marker size scales with FRP (MW)"><input type="checkbox" id="layFires" checked><span class="dot" style="--c:#ff3838"></span>Fires</label>
-            <label class="toggle"><input type="checkbox" id="layPlumes" checked><span class="dot" style="--c:#ffb800"></span>Plumes</label>
-            <label class="toggle"><input type="checkbox" id="layStations" checked><span class="dot" style="--c:#9cff9c"></span>Stations</label>
+            <label class="toggle" title="Plume path (dashed line) — color = estimated PM2.5 contribution at Delhi: green &lt;4, amber 4–10, red &gt;10 µg/m³. High-plume red (#DC2626) is darker than fire dots (#ff3838); shape differs (dashed line vs dot + halo)."><input type="checkbox" id="layPlumes" checked><span class="plume-key" aria-hidden="true"><i style="--c:#16A34A"></i><i style="--c:#D97706"></i><i style="--c:#DC2626"></i></span>Plumes</label>
+            <div class="plume-scale" aria-label="Plume contribution scale: green below 4, amber 4 to 10, red above 10 micrograms per cubic metre">
+              <span><i style="--c:#16A34A"></i>&lt;4</span>
+              <span><i style="--c:#D97706"></i>4–10</span>
+              <span><i style="--c:#DC2626"></i>&gt;10 µg/m³</span>
+            </div>
+            <label class="toggle" title="Station dots follow the AQI color scale (top-left legend)"><input type="checkbox" id="layStations" checked><span class="dot dot-aqi" style="--c:#16A34A" aria-hidden="true"></span>Stations <small class="toggle-sub">by AQI · see scale ↖</small></label>
             <div class="base-toggle" title="Basemap style">
               <button data-base-btn="light" class="active">Light</button>
               <button data-base-btn="dark">Dark</button>

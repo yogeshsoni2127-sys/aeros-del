@@ -116,6 +116,7 @@
 
   const Utils = {
     AQI_CATEGORIES,
+    DISPLAY_COLOR_MAP,
     aqiCategory,
     aqiColor,
     stationDisplayColor,

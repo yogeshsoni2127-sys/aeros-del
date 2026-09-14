@@ -31,10 +31,8 @@
     } catch (e) { /* private mode */ }
     return 'light';
   }
-  const FIRE_REGIONS = [
-    { name: 'Punjab', colors: '#ff3838', lat: 30.8, lon: 75.4 },
-    { name: 'Haryana', colors: '#ffb800', lat: 29.6, lon: 76.4 },
-  ];
+  // NOTE: no static region placeholders here — live fires come from the
+  // backend snapshot. Fires render as #ff3838 dots, unchanged.
 
   class AeriMap {
     constructor(containerId, maptilerKey) {
@@ -229,7 +227,13 @@
         type: 'line',
         source: 'plumes',
         paint: {
-          'line-color': ['interpolate', ['linear'], ['get', 'estimated_contribution_pm25'], 0, '#16A34A', 5, '#D97706', 15, '#DC2626'],
+          // Plume path color = estimated PM2.5 contribution at Delhi
+          // (µg/m³): green <4 / amber 4–10 / red >10 — same stops and
+          // hexes as the plume legend + arrival chips in plume.js.
+          // High-plume red (#DC2626) vs fire red (#ff3838) is deliberate:
+          // plumes are dashed LINES, fires are DOT+halo markers, and the
+          // two reds are distinct hues (brick vs safety-red).
+          'line-color': ['interpolate', ['linear'], ['get', 'estimated_contribution_pm25'], 0, '#16A34A', 4, '#D97706', 10, '#DC2626'],
           'line-width': 2.2,
           'line-opacity': 0.85,
           'line-dasharray': [2, 1.4],
@@ -416,19 +420,20 @@
     return ['interpolate', ['linear'], ['get', cfg.prop]].concat(cfg.stops);
   }
 
-  // Display override for the light theme: Moderate-yellow (#ffff00)
-  // and Satisfactory-mint (#9cff9c) wash out on warm white, so they
-  // render as warning-amber / success-green. Duplicated here so the map
-  // module never depends on utils.js load order.
-  const DISPLAY_COLOR_MAP = {
-    '#ffff00': '#D97706',
-    '#9cff9c': '#16A34A',
-  };
-
+  // Display remap (Satisfactory-mint #9cff9c → #16A34A, Moderate-yellow
+  // #ffff00 → #D97706) lives in utils.js as Utils.DISPLAY_COLOR_MAP /
+  // Utils.stationDisplayColor — the single source of truth. This module
+  // delegates to it (utils.js loads before map.js in index.html) and only
+  // falls back to a local table if Utils failed to load, so the map never
+  // hard-depends on script order.
   function stationColor(hex) {
+    if (global.Utils && typeof global.Utils.stationDisplayColor === 'function') {
+      return global.Utils.stationDisplayColor(hex);
+    }
     if (typeof hex === 'string') {
-      const mapped = DISPLAY_COLOR_MAP[hex.toLowerCase()];
-      if (mapped) return mapped;
+      const lo = hex.toLowerCase();
+      if (lo === '#ffff00') return '#D97706';
+      if (lo === '#9cff9c') return '#16A34A';
     }
     return hex;
   }
