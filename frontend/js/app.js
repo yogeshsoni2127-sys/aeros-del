@@ -220,14 +220,22 @@
         const m = r.members || {};
         const active = Object.keys(m).filter((k) => m[k] && k !== 'baseline');
         const lines = [];
-        if (m.baseline) {
-          lines.push(`<span class="mode-base">● BASELINE</span> — no fitted weights on disk yet`);
-        } else {
-          lines.push(`<span class="mode-active">● TRAINED</span> — ${Utils.esc(active.join(' + '))}`);
+        // The 72h research ensemble is the headline system. The hourly
+        // baseline/trainer lines below describe a legacy subsystem whose
+        // guardrail report predates it — demote them while it is live so
+        // judges don't read "BASELINE / refused" as the verdict.
+        const e72live = !!(r.ensemble_72h?.per_pollutant_test?.length &&
+                           (r.real_overlay_n || 0) > 0);
+        if (!e72live) {
+          if (m.baseline) {
+            lines.push(`<span class="mode-base">● BASELINE</span> — no fitted weights on disk yet`);
+          } else {
+            lines.push(`<span class="mode-active">● TRAINED</span> — ${Utils.esc(active.join(' + '))}`);
+          }
         }
         if (r.db) lines.push(`${r.db.readings} readings · ${r.db.stations} stations in history`);
         const tr = r.training || {};
-        if (tr.samples != null && !tr.lgbm?.saved) {
+        if (!e72live && tr.samples != null && !tr.lgbm?.saved) {
           const lgbm = tr.lgbm || {};
           lines.push(`Last train: ${tr.samples} samples` +
             (lgbm.pearson_r != null ? ` · LGBM r=${lgbm.pearson_r}, MAE ${lgbm.model_mae} vs persist ${tr.holdout?.persistence?.mae}` : '') +

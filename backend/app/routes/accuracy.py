@@ -29,7 +29,6 @@ def _get_service(request: Request):
 
 def _ensemble_72h_block():
     """Real SIH-p2 72h ensemble skill (no DB needed).
-
     Returns per-pollutant test RMSE, per-horizon backtest and AQI hit
     rates from scripts/ensemble_skill.json (written by the exporter),
     or None when the exporter has never run.
@@ -45,6 +44,17 @@ def _ensemble_72h_block():
 def _db_path(service) -> Path:
     from backend.app.config import PROJECT_ROOT
     return PROJECT_ROOT / service.settings.database_path
+
+
+def _count_readings(db) -> int:
+    import sqlite3
+    try:
+        con = sqlite3.connect(str(db))
+        n = con.execute("SELECT COUNT(*) FROM station_readings").fetchone()[0]
+        con.close()
+        return int(n)
+    except Exception:
+        return 0
 
 
 @router.get("/summary")
@@ -82,8 +92,16 @@ async def accuracy_summary(request: Request, include_gbm: bool = False):
                 "reason": "History still warming up — ensemble skill below.",
                 "ensemble_72h": _ensemble_72h_block()}
     if not series:
+        # Normal on free-tier ephemeral disk: every deploy/restart wipes
+        # SQLite, so only the current cycle's readings exist (~25 = one
+        # refresh) and there are no consecutive same-sensor pairs to score
+        # yet. The static 72h ensemble skill below is the validated number.
+        n_read = _count_readings(db)
         return {"available": False,
-                "reason": "Database has no readings yet.",
+                "reason": (f"Live backtest needs consecutive history "
+                           f"({n_read} readings stored so far — disk resets on "
+                           f"each deploy). Validated 72h skill below."),
+                "readings_stored": n_read,
                 "ensemble_72h": _ensemble_72h_block()}
 
     skill = backtest(series)
