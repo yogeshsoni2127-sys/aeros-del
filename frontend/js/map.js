@@ -134,25 +134,17 @@
     }
 
     _initSources() {
-      // PM2.5 heatmap source (station points with pm25 weight)
+      // Heatmap source (station points; weight metric switchable)
       this.map.addSource('pm25-heat', { type: 'geojson', data: emptyFC() });
+      this.heatMetric = 'pm25';
       this.map.addLayer({
         id: 'pm25-heat',
         type: 'heatmap',
         source: 'pm25-heat',
         paint: {
-          'heatmap-weight': ['interpolate', ['linear'], ['get', 'pm25'], 0, 0, 150, 0.6, 500, 1],
+          'heatmap-weight': heatWeightExpr('pm25'),
           'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 0, 1, 9, 2.4],
-          'heatmap-color': [
-            'interpolate', ['linear'], ['heatmap-density'],
-            0, 'rgba(0,0,0,0)',
-            0.15, 'rgba(0,212,255,0.25)',
-            0.35, 'rgba(255,255,0,0.35)',
-            0.5, 'rgba(255,126,0,0.55)',
-            0.7, 'rgba(255,0,0,0.75)',
-            0.9, 'rgba(153,0,76,0.9)',
-            1, 'rgba(126,0,35,0.95)',
-          ],
+          'heatmap-color': HEAT_RAMP,
           'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 0, 12, 9, 34],
           'heatmap-opacity': 0.75,
         },
@@ -323,6 +315,9 @@
             id: id,
             name: st.short_name,
             pm25: f.pm25[hour],
+            pm10: (f.pm10 || [])[hour] || 0,
+            no2: (f.no2 || [])[hour] || 0,
+            o3: (f.o3 || [])[hour] || 0,
             aqi: (f.aqi || [])[hour] || 0,
             category: (f.category || [])[hour] || 'Unknown',
             color: stationColor((f.colors || [])[hour] || '#808080'),
@@ -350,6 +345,19 @@
       const args = Array.isArray(targets) ? targets : [targets];
       args.forEach((lid) => {
         if (this.map.getLayer(lid)) this.map.setLayoutProperty(lid, 'visibility', visible ? 'visible' : 'none');
+      });
+    }
+
+    // Switch the heatmap weight between PM2.5 / PM10 / NO2 / O3.
+    setHeatMetric(metric) {
+      if (!HEAT_METRICS[metric]) return;
+      this.heatMetric = metric;
+      if (this.map.isStyleLoaded() && this.map.getLayer('pm25-heat')) {
+        this.map.setPaintProperty('pm25-heat', 'heatmap-weight',
+          heatWeightExpr(metric));
+      }
+      document.querySelectorAll('[data-heat-metric]').forEach((b) => {
+        b.classList.toggle('active', b.dataset.heatMetric === metric);
       });
     }
 
@@ -383,12 +391,39 @@
     return { type: 'FeatureCollection', features: [] };
   }
 
-  // Display override: Moderate-yellow station dots render as black.
+  // Heat metric config: (property, weight stops, label). Darker ramp
+  // throughout so low densities stay visible on the light basemap.
+  const HEAT_METRICS = {
+    pm25: { prop: 'pm25', stops: [0, 0, 150, 0.6, 500, 1], label: 'PM2.5' },
+    pm10: { prop: 'pm10', stops: [0, 0, 250, 0.6, 800, 1], label: 'PM10' },
+    no2:  { prop: 'no2',  stops: [0, 0, 80, 0.6, 300, 1],  label: 'NO₂' },
+    o3:   { prop: 'o3',   stops: [0, 0, 100, 0.6, 250, 1], label: 'O₃' },
+  };
+  const HEAT_RAMP = [
+    'interpolate', ['linear'], ['heatmap-density'],
+    0, 'rgba(0,0,0,0)',
+    0.12, 'rgba(0,77,141,0.45)',
+    0.3, 'rgba(0,112,209,0.55)',
+    0.48, 'rgba(213,59,0,0.65)',
+    0.66, 'rgba(200,27,58,0.8)',
+    0.84, 'rgba(153,0,76,0.9)',
+    1, 'rgba(80,0,20,0.95)',
+  ];
+
+  function heatWeightExpr(metric) {
+    const cfg = HEAT_METRICS[metric] || HEAT_METRICS.pm25;
+    return ['interpolate', ['linear'], ['get', cfg.prop]].concat(cfg.stops);
+  }
+
+  // Display override: Moderate-yellow station dots render as black,
+  // pale Satisfactory green as dark green (invisible on light basemap).
   // (Same rule as Utils.stationDisplayColor; duplicated here so the map
   // module never depends on utils.js load order.)
+  const DISPLAY_COLOR_MAP = { '#ffff00': '#000000', '#9cff9c': '#007a00' };
   function stationColor(hex) {
-    if (typeof hex === 'string' && hex.toLowerCase() === '#ffff00') {
-      return '#000000';
+    if (typeof hex === 'string') {
+      const hit = DISPLAY_COLOR_MAP[hex.toLowerCase()];
+      if (hit) return hit;
     }
     return hex;
   }

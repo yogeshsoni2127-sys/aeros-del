@@ -106,13 +106,13 @@
           tension: 0.35,
         });
         this.chart.data.labels = labels;
-      } else if (this.pollutant === 'pm25' || this.pollutant === 'pm10') {
+      } else if (['pm25', 'pm10', 'no2', 'o3'].includes(this.pollutant)) {
         const key = this.pollutant;
         const base = f[key] || [];
-        // PM10 has its own uncertainty envelope (scaled by the station's
-        // observed PM10/PM2.5 ratio); fall back to the PM2.5 band if absent.
-        const hi = (key === 'pm10' && f.pm10_upper) ? f.pm10_upper : (f.upper || []);
-        const lo = (key === 'pm10' && f.pm10_lower) ? f.pm10_lower : (f.lower || []);
+        // Per-pollutant uncertainty envelope when exported
+        // (<key>_upper/<key>_lower); PM2.5 legacy keys as fallback.
+        const hi = f[`${key}_upper`] || (key === 'pm10' && f.pm10_upper) || (f.upper || []);
+        const lo = f[`${key}_lower`] || (key === 'pm10' && f.pm10_lower) || (f.lower || []);
 
         const labels = histLabels.concat(
           (f.timestamps || []).map((t) => Utils.fmtTime(t))

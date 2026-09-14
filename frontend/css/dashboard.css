@@ -235,6 +235,25 @@ body[data-basemap="dark"] .maplibregl-ctrl-attrib a { color: var(--mute-dark) !i
 }
 
 .layer-toggles { display: flex; flex-direction: column; gap: 6px; }
+/* Heatmap pollutant pills */
+.heat-metric-row { display: flex; gap: 4px; margin-top: 6px; }
+.heat-metric-row button {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 6px 4px;
+  border-radius: 999px;
+  border: 1px solid var(--hairline-dark);
+  background: transparent;
+  color: var(--mute-dark);
+  cursor: pointer;
+}
+.heat-metric-row button.active {
+  color: #fff;
+  border-color: var(--primary);
+  background: var(--primary);
+}
 .toggle {
   display: flex; align-items: center; gap: 7px;
   font-size: 14px; color: var(--on-dark);

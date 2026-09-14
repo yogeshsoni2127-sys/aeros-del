@@ -477,6 +477,14 @@ class AQIService:
                     # Extras pass through to station-detail + accuracy table.
                     "no2": payload.get("no2", []),
                     "o3": payload.get("o3", []),
+                    "lower": payload.get("lower", []),
+                    "upper": payload.get("upper", []),
+                    "pm10_lower": payload.get("pm10_lower", []),
+                    "pm10_upper": payload.get("pm10_upper", []),
+                    "no2_lower": payload.get("no2_lower", []),
+                    "no2_upper": payload.get("no2_upper", []),
+                    "o3_lower": payload.get("o3_lower", []),
+                    "o3_upper": payload.get("o3_upper", []),
                     "daily": payload.get("daily", []),
                     "blend_used": payload.get("blend_used", {}),
                     "provenance": "sih-p2 ensemble (daily model, hourly downscaled)",
@@ -816,6 +824,12 @@ class AQIService:
                     "id": station["id"],
                     "name": station["short_name"],
                     "pm25": value,
+                    "pm10": (_get(forecast, "pm10")
+                             or (current or {}).get("pollutants", {}).get("pm10", 0)),
+                    "no2": (_get(forecast, "no2")
+                            or (current or {}).get("pollutants", {}).get("no2", 0)),
+                    "o3": (_get(forecast, "o3")
+                           or (current or {}).get("pollutants", {}).get("o3", 0)),
                     "aqi": (_get(forecast, "aqi")
                             or (current or {}).get("aqi", 0)),
                     "category": (

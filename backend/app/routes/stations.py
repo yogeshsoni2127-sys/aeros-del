@@ -71,8 +71,10 @@ async def station_forecast(
         )
     data = dict(forecast)
     if hours and 0 < hours < len(data["timestamps"]):
-        for key in ("timestamps", "pm25", "pm10", "aqi", "category",
-                    "colors", "lower", "upper", "pm10_lower", "pm10_upper"):
+        for key in ("timestamps", "pm25", "pm10", "no2", "o3", "aqi",
+                    "category", "colors", "lower", "upper",
+                    "pm10_lower", "pm10_upper",
+                    "no2_lower", "no2_upper", "o3_lower", "o3_upper"):
             if key in data:
                 data[key] = data[key][:hours]
     return data

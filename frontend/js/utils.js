@@ -36,11 +36,14 @@
   }
 
   // Display override: Moderate-yellow (#ffff00) reads poorly on light
-  // chrome, so STATION markers/rows render it as black. AQI math and
-  // legends elsewhere are untouched — this is display-only.
+  // chrome, so STATION markers/rows render it as black; pale Satisfactory
+  // green (#9cff9c) is near-invisible on the light basemap, so it renders
+  // as dark green. AQI math and legends elsewhere are untouched.
+  const DISPLAY_COLOR_MAP = { '#ffff00': '#000000', '#9cff9c': '#007a00' };
   function stationDisplayColor(hex) {
-    if (typeof hex === 'string' && hex.toLowerCase() === '#ffff00') {
-      return '#000000';
+    if (typeof hex === 'string') {
+      const hit = DISPLAY_COLOR_MAP[hex.toLowerCase()];
+      if (hit) return hit;
     }
     return hex;
   }

@@ -258,12 +258,17 @@ def main() -> None:
             for _, d in grp.iterrows() for hh in range(24)
         ]
         lower, upper, aqi_s, cat_s, col_s = [], [], [], [], []
+        bands = {p: [] for p in ("no2", "o3")}
         for i in range(72):
             h = int(grp.iloc[i // 24]["horizon_h"])
             vals = {p: series[p][i] for p in TARGETS}
             band = {p: 1.25 * mae_h.get((p, h), 10.0) for p in ("pm25", "pm10")}
             lower.append(round(max(0.0, vals["pm25"] - band["pm25"]), 1))
             upper.append(round(vals["pm25"] + band["pm25"], 1))
+            for p in ("no2", "o3"):
+                w = 1.25 * mae_h.get((p, h), 8.0)
+                bands[p].append((round(max(0.0, vals[p] - w), 1),
+                                 round(vals[p] + w, 1)))
             res = naqi.calculate_naqi(
                 {"pm25": vals["pm25"], "pm10": vals["pm10"],
                  "no2": vals["no2"], "o3": vals["o3"]})
@@ -288,6 +293,10 @@ def main() -> None:
             "pm25": series["pm25"], "pm10": series["pm10"],
             "no2": series["no2"], "o3": series["o3"],
             "lower": lower, "upper": upper,
+            "no2_lower": [lo for lo, _ in bands["no2"]],
+            "no2_upper": [hi for _, hi in bands["no2"]],
+            "o3_lower": [lo for lo, _ in bands["o3"]],
+            "o3_upper": [hi for _, hi in bands["o3"]],
             "pm10_lower": [round(max(0.0, v - pm10_band_h1), 1) for v in series["pm10"]],
             "pm10_upper": [round(v + pm10_band_h1, 1) for v in series["pm10"]],
             "aqi": aqi_s, "category": cat_s, "colors": col_s,
@@ -334,7 +343,11 @@ def main() -> None:
             "geometry": {"type": "Point",
                          "coordinates": [st["longitude"], st["latitude"]]},
             "properties": {"id": sid, "name": st["short_name"],
-                           "pm25": f["daily"][0]["pm25"], "aqi": f["daily"][0]["aqi"],
+                           "pm25": f["daily"][0]["pm25"],
+                           "pm10": f["daily"][0]["pm10"],
+                           "no2": f["daily"][0]["no2"],
+                           "o3": f["daily"][0]["o3"],
+                           "aqi": f["daily"][0]["aqi"],
                            "category": f["daily"][0]["category"],
                            "color": f["daily"][0]["color"]},
         })

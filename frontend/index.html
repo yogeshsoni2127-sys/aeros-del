@@ -86,7 +86,7 @@
           <div class="panel-title">Live Spatial AQI · Delhi NCR</div>
           <div class="legend" id="aqiLegend">
             <span style="--c:#00e400">Good</span>
-            <span style="--c:#9cff9c">Sat</span>
+            <span style="--c:#007a00">Sat</span>
             <span style="--c:#000000">Mod</span>
             <span style="--c:#ff7e00">Poor</span>
             <span style="--c:#ff0000">VPoor</span>
@@ -97,10 +97,16 @@
 
         <div class="map-overlay top-right">
           <div class="layer-toggles">
-            <label class="toggle"><input type="checkbox" id="layHeat" checked><span class="dot" style="--c:#0070d1"></span>PM2.5 Heat</label>
+            <label class="toggle"><input type="checkbox" id="layHeat" checked><span class="dot" style="--c:#0070d1"></span>Heat</label>
+            <div class="heat-metric-row" title="Heatmap pollutant">
+              <button data-heat-metric="pm25" class="active">PM2.5</button>
+              <button data-heat-metric="pm10">PM10</button>
+              <button data-heat-metric="no2">NO₂</button>
+              <button data-heat-metric="o3">O₃</button>
+            </div>
             <label class="toggle" title="Active fire / ash hotspots — marker size scales with FRP (MW)"><input type="checkbox" id="layFires" checked><span class="dot" style="--c:#ff3838"></span>Fires</label>
             <label class="toggle"><input type="checkbox" id="layPlumes" checked><span class="dot" style="--c:#ffb800"></span>Plumes</label>
-            <label class="toggle"><input type="checkbox" id="layStations" checked><span class="dot" style="--c:#9cff9c"></span>Stations</label>
+            <label class="toggle"><input type="checkbox" id="layStations" checked><span class="dot" style="--c:#007a00"></span>Stations</label>
             <div class="base-toggle" title="Basemap style">
               <button data-base-btn="light" class="active">Light</button>
               <button data-base-btn="dark">Dark</button>
@@ -178,6 +184,8 @@
           <div class="pollutant-tabs" id="pollutantTabs">
             <button data-p="pm25" class="active">PM2.5</button>
             <button data-p="pm10">PM10</button>
+            <button data-p="no2">NO₂</button>
+            <button data-p="o3">O₃</button>
             <button data-p="aqi">NAQI</button>
           </div>
           <button class="mini-btn" id="btnCsv" title="Download this forecast as CSV">CSV</button>

@@ -110,6 +110,13 @@
       toggleMap('plumes', 'layPlumes');
       toggleMap('stations', 'layStations');
 
+      // Heatmap pollutant switch (PM2.5 / PM10 / NO2 / O3).
+      document.querySelectorAll('[data-heat-metric]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          if (this.map) this.map.setHeatMetric(btn.dataset.heatMetric);
+        });
+      });
+
       // Basemap Dark/Light switch (default Light = readable).
       document.querySelectorAll('[data-base-btn]').forEach((btn) => {
         if (this.map && this.map.baseStyle) {
