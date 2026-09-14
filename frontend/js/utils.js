@@ -35,6 +35,16 @@
     return aqiCategory(aqi).color;
   }
 
+  // Display override: Moderate-yellow (#ffff00) reads poorly on light
+  // chrome, so STATION markers/rows render it as black. AQI math and
+  // legends elsewhere are untouched — this is display-only.
+  function stationDisplayColor(hex) {
+    if (typeof hex === 'string' && hex.toLowerCase() === '#ffff00') {
+      return '#000000';
+    }
+    return hex;
+  }
+
   function pollutantName(key) {
     return POLLUTANT_NAMES[key] || key.toUpperCase();
   }
@@ -85,6 +95,7 @@
     AQI_CATEGORIES,
     aqiCategory,
     aqiColor,
+    stationDisplayColor,
     pollutantName,
     fetchJSON,
     wsUrl,

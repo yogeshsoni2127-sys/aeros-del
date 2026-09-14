@@ -6,11 +6,13 @@
 
   // Must match backend aisi_severity_category(): 0-2 / 2-5 / 5-8 / 8-10.
   // (Old frontend used 0-3 for green, which hid Mild 2-3 events.)
+  // Display: Mild-yellow renders as black; green/red use dark variants
+  // for contrast on the light card. Orange left untouched.
   const AISI_ZONES = [
-    { lo: 0,  hi: 2,  color: '#00e400', label: 'Well-Mixed' },
-    { lo: 2,  hi: 5,  color: '#ffff00', label: 'Mild Inversion' },
+    { lo: 0,  hi: 2,  color: '#006400', label: 'Well-Mixed' },
+    { lo: 2,  hi: 5,  color: '#000000', label: 'Mild Inversion' },
     { lo: 5,  hi: 8,  color: '#ff7e00', label: 'Moderate Inversion' },
-    { lo: 8,  hi: 10, color: '#ff0000', label: 'Severe Inversion' },
+    { lo: 8,  hi: 10, color: '#8f0000', label: 'Severe Inversion' },
   ];
 
   // Gauge geometry: 120° sweep centred on vertical
@@ -66,27 +68,27 @@
         line.setAttribute('x1', p.x); line.setAttribute('y1', p.y);
         line.setAttribute('x2', CX + (R - 8) * Math.sin(deg * Math.PI / 180));
         line.setAttribute('y2', CY - (R - 8) * Math.cos(deg * Math.PI / 180));
-        line.setAttribute('stroke', 'rgba(255,255,255,0.35)');
+        line.setAttribute('stroke', 'rgba(0,0,0,0.4)');
         line.setAttribute('stroke-width', '1');
         this.svg.appendChild(line);
       }
-      // Needle pivot
+      // Needle pivot (ink — the card is light, white would vanish)
       const pivot = document.createElementNS(ns, 'circle');
       pivot.setAttribute('cx', CX);
       pivot.setAttribute('cy', CY);
       pivot.setAttribute('r', '6');
-      pivot.setAttribute('fill', '#fff');
-      pivot.setAttribute('filter', 'drop-shadow(0 0 6px rgba(255,255,255,0.8))');
+      pivot.setAttribute('fill', '#000');
+      pivot.setAttribute('filter', 'drop-shadow(0 0 6px rgba(0,0,0,0.35))');
       this.svg.appendChild(pivot);
 
-      // Needle group
+      // Needle marker (ink; glow takes the active zone color in update())
       this.needle = document.createElementNS(ns, 'g');
       const needleLine = document.createElementNS(ns, 'line');
       needleLine.setAttribute('x1', CX);
       needleLine.setAttribute('y1', CY - 8);
       needleLine.setAttribute('x2', CX);
       needleLine.setAttribute('y2', CY - R + 16);
-      needleLine.setAttribute('stroke', '#ffffff');
+      needleLine.setAttribute('stroke', '#000000');
       needleLine.setAttribute('stroke-width', '3');
       needleLine.setAttribute('stroke-linecap', 'round');
       this.needle.appendChild(needleLine);
@@ -102,8 +104,8 @@
       this.needle.style.transition = 'transform 0.6s cubic-bezier(0.3,0.8,0.3,1)';
       this.needle.style.transform = `rotate(${rot}deg)`;
       this.needle.style.transformOrigin = `${CX}px ${CY}px`;
-      this.needle.setAttribute('stroke', color || '#fff');
-      this.needle.style.filter = `drop-shadow(0 0 ${8 + v * 2}px ${color || '#fff'})`;
+      this.needle.setAttribute('stroke', color || '#000');
+      this.needle.style.filter = `drop-shadow(0 0 ${8 + v * 2}px ${color || '#000'})`;
     }
   }
 

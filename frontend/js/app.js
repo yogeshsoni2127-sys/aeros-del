@@ -270,7 +270,7 @@
           const cur = s.current || {};
           const h24 = s.forecast_h24 || {};
           const ls = s.last_step;
-          const color = cur.color || '#808080';
+          const color = Utils.stationDisplayColor(cur.color || '#808080');
           const err = ls != null ? ls.error : null;
           const errColor = err == null ? 'var(--text-dim)' : (Math.abs(err) < 15 ? 'var(--toxic)' : (Math.abs(err) < 40 ? 'var(--amber)' : 'var(--danger)'));
           return `
@@ -432,12 +432,13 @@
     _renderAisi(aisi) {
       if (!aisi || aisi.aisi == null) return;
       const a = aisi.aisi;
-      const color = aisi.color || Utils.aqiColor(Math.min(500, a * 50));
+      const color = Utils.stationDisplayColor(
+        aisi.color || Utils.aqiColor(Math.min(500, a * 50)));
       this.aisiGauge.update(a, color);
 
       document.getElementById('aisiValue').textContent = a.toFixed(1);
       document.getElementById('aisiValue').style.color = color;
-      document.getElementById('aisiValue').style.textShadow = `0 0 18px ${color}`;
+      document.getElementById('aisiValue').style.textShadow = 'none';
       document.getElementById('aisiCategory').textContent = aisi.category || '—';
 
       const trendEl = document.getElementById('aisiTrend');
@@ -489,7 +490,7 @@
         .sort((a, b) => (b.current?.aqi || 0) - (a.current?.aqi || 0))
         .map((s) => {
           const c = s.current || {};
-          const color = c.color || '#808080';
+          const color = Utils.stationDisplayColor(c.color || '#808080');
           const sel = this.state.selectedStation === s.id ? 'selected' : '';
           const histN = s.history_count != null ? s.history_count : ((s.history || []).length);
           const stale = histN < 6 ? ' · only ' + histN + ' pts' : ' · ' + histN + ' pts';

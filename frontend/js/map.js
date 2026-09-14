@@ -298,7 +298,8 @@
     /* ── Public update API ─────────────────────────────────────── */
     update(forecastGeojson, stationsGeojson, firesGeojson, plumesGeojson) {
       if (!this.map.isStyleLoaded()) return;
-      this._updateSource('stations', stationsGeojson || emptyFC());
+      this._updateSource('stations',
+        stationColorsRemapped(stationsGeojson || emptyFC()));
       this._updateSource('pm25-heat', forecastGeojson || stationsGeojson || emptyFC());
       this._updateSource('fires', firesGeojson || emptyFC());
       this._updateSource('plumes', plumesGeojson || emptyFC());
@@ -324,7 +325,7 @@
             pm25: f.pm25[hour],
             aqi: (f.aqi || [])[hour] || 0,
             category: (f.category || [])[hour] || 'Unknown',
-            color: (f.colors || [])[hour] || '#808080',
+            color: stationColor((f.colors || [])[hour] || '#808080'),
           },
         });
       }
@@ -380,6 +381,26 @@
 
   function emptyFC() {
     return { type: 'FeatureCollection', features: [] };
+  }
+
+  // Display override: Moderate-yellow station dots render as black.
+  // (Same rule as Utils.stationDisplayColor; duplicated here so the map
+  // module never depends on utils.js load order.)
+  function stationColor(hex) {
+    if (typeof hex === 'string' && hex.toLowerCase() === '#ffff00') {
+      return '#000000';
+    }
+    return hex;
+  }
+
+  function stationColorsRemapped(fc) {
+    if (!fc || !Array.isArray(fc.features)) return fc;
+    for (const feat of fc.features) {
+      if (feat && feat.properties && feat.properties.color != null) {
+        feat.properties.color = stationColor(feat.properties.color);
+      }
+    }
+    return fc;
   }
 
   global.AeriMap = AeriMap;
