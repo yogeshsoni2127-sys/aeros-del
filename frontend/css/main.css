@@ -1,55 +1,52 @@
 /* ═══════════════════════════════════════════════════════════════
-   AEROS — Design System & Tokens (PlayStation chapter edition)
-   Black nav · dark map hero · light utility cards · blue ticker
-   band. Pill CTAs, 8px cards, SST-substitute type. Imagery and the
-   map do the storytelling; chrome stays flat and quiet.
+   AEROS — Design System & Tokens (Bugatti noir edition)
+   Near-pure black canvas, white letterspaced display, transparent
+   pill buttons. Photography (the map) is the only voltage.
+   Substitutes: Saira Condensed (Display) / Cormorant Garamond
+   (Text serif) / JetBrains Mono (Monospace precision).
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
-  /* ── Brand ──────────────────────────────────────────────────── */
-  --primary: #0070d1;
-  --primary-pressed: #0064b7;
-  --primary-active: #004d8d;
-  --on-primary: #ffffff;
-  --link-light: #0064b7;
-  --link-dark: #53b1ff;
-  --commerce: #d53b00;
-  --commerce-pressed: #aa2f00;
+  color-scheme: dark;
+  /* ── Mono canvas ────────────────────────────────────────────── */
+  --canvas: #000000;
+  --surface-soft: #0d0d0d;
+  --surface-card: #141414;
+  --surface-elevated: #1f1f1f;
+  --hairline: #262626;
+  --hairline-strong: #3a3a3a;
 
-  /* ── Ink & text ─────────────────────────────────────────────── */
-  --ink: #000000;
-  --body-light: rgba(0, 0, 0, 0.6);
-  --mute-light: #6b6b6b;
-  --ash-light: #cccccc;
+  /* ── Ink ────────────────────────────────────────────────────── */
+  --ink: #ffffff;
+  --body: #cccccc;
+  --body-strong: #e6e6e6;
+  --muted: #999999;
+  --muted-soft: #666666;
   --on-dark: #ffffff;
-  --body-dark: rgba(255, 255, 255, 0.7);
-  --mute-dark: rgba(229, 229, 229, 0.55);
 
-  /* ── Surfaces ───────────────────────────────────────────────── */
-  --canvas-light: #ffffff;
-  --surface-soft: #f3f3f3;
-  --surface-card: #f5f7fa;
-  --canvas-dark: #000000;
-  --surface-dark-elevated: #121314;
-  --surface-dark-card: #181818;
-  --hairline-light: #f3f3f3;
-  --hairline-dark: rgba(229, 229, 229, 0.2);
+  /* ── The only non-monochrome token ──────────────────────────── */
+  --link: #c3d9f3;
 
   /* ── Legacy aliases (layout files keep working) ─────────────── */
-  --bg-deep: var(--canvas-light);
-  --bg-panel: var(--canvas-light);
-  --bg-panel-strong: var(--canvas-light);
-  --electric: var(--primary);
-  --toxic: #00a651;
-  --amber: #b26a00;
-  --danger: #c81b3a;
-  --glass: var(--canvas-light);
-  --glass-border: var(--hairline-light);
+  --bg-deep: var(--canvas);
+  --bg-panel: var(--canvas);
+  --bg-panel-strong: var(--surface-card);
+  --electric: var(--ink);
+  --primary: #ffffff;
+  --primary-pressed: #e6e6e6;
+  --primary-focus: #ffffff;
+  --primary-on-dark: #ffffff;
+  --toxic: #5fa657;
+  --amber: #d4a017;
+  --danger: #d4a017;
+  --commerce: #ffffff;
+  --glass: var(--canvas);
+  --glass-border: var(--hairline);
   --text-strong: var(--ink);
-  --text-mid: var(--body-light);
-  --text-dim: var(--mute-light);
+  --text-mid: var(--body);
+  --text-dim: var(--muted);
 
-  /* AQI scale (data semantics — unchanged) */
+  /* AQI scale (data semantics — unchanged, bright on black) */
   --aqi-good: #00e400;
   --aqi-satisfactory: #9cff9c;
   --aqi-moderate: #ffff00;
@@ -58,30 +55,44 @@
   --aqi-severe: #99004c;
   --aqi-severe-plus: #7e0023;
 
-  /* ── Typography: Roboto Light display, Inter body ───────────── */
-  --font-display: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-  --font-text: 'Inter', system-ui, -apple-system, sans-serif;
+  /* ── Trinity: Display / Text serif / Monospace ──────────────── */
+  --font-display: 'Saira Condensed', 'Arial Narrow', sans-serif;
+  --font-text: 'Cormorant Garamond', Garamond, 'Times New Roman', serif;
+  --font-mono2: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
   --font-head: var(--font-display);
-  --font-data: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  --font-data: var(--font-mono2);
   --font-body: var(--font-text);
 
-  /* ── Shape: pills + 8px cards, bands flat ───────────────────── */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 16px;
+  /* ── Shape: rectangular everything, pills only for buttons ──── */
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
   --radius-pill: 9999px;
 
-  /* Elevation: flat chrome; press lift only */
+  /* Elevation: none. Depth comes from photography, not chrome. */
   --shadow-panel: none;
-  --shadow-press: 0 4px 12px rgba(0, 0, 0, 0.16);
 
   /* ── Spacing ────────────────────────────────────────────────── */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
-  --space-4: 24px;
-  --space-5: 32px;
-  --space-section: 48px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-section: 120px; /* spec {spacing.section}; dashboard grid keeps
+    dense 40px gutters for live ops, section rhythm reserved for bands */
+}
+
+/* ── Screen-visibility auto contrast ────────────────────────────
+   Bugatti is monochrome, so legibility on dim/bright screens and over
+   light map tiles comes from stroke + scrim weight, never hue. */
+@media (prefers-contrast: more) {
+  :root {
+    --muted: #bdbdbd;
+    --muted-soft: #8c8c8c;
+    --hairline: #4a4a4a;
+    --hairline-strong: #6a6a6a;
+    --body: #e2e2e2;
+  }
 }
 
 * {
@@ -96,42 +107,42 @@ html, body {
 
 body {
   font-family: var(--font-body);
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 400;
   line-height: 1.5;
-  letter-spacing: 0.1px;
-  background: var(--canvas-light);
-  color: var(--text-strong);
+  letter-spacing: 0;
+  background: var(--canvas);
+  color: var(--body);
   overflow: hidden;
 }
 
 h1, h2, h3 {
   font-family: var(--font-head);
-  font-weight: 300;
-  letter-spacing: -0.1px;
-  line-height: 1.25;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
 }
 
 .accent {
-  color: var(--primary);
+  color: var(--ink);
 }
 
-/* Scrollbars: quiet */
+/* Scrollbars: hairline quiet */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: var(--ash-light);
-  border-radius: 8px;
+  background: var(--hairline-strong);
+  border-radius: 0;
 }
-::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
 
 /* Utility */
 .mono { font-family: var(--font-data); }
 .dim { color: var(--text-dim); }
 .strong { color: var(--text-strong); }
 
-button, input { font-family: var(--font-body); outline: none; }
-button:focus-visible { outline: none; border: 2px solid var(--primary); }
+button, input { font-family: var(--font-data); outline: none; }
+button:focus-visible { outline: 1px solid var(--ink); }
 button:active { transform: scale(0.97); }
 
-a { color: var(--link-light); }
+a { color: var(--link); }

@@ -29,7 +29,7 @@
       const v = localStorage.getItem('aeros-basemap');
       if (v === 'dark' || v === 'light') return v;
     } catch (e) { /* private mode */ }
-    return 'light';
+    return 'dark';
   }
   const FIRE_REGIONS = [
     { name: 'Punjab', colors: '#ff3838', lat: 30.8, lon: 75.4 },
@@ -42,7 +42,7 @@
       this.onStationClick = null;
       this.currentHour = 0;
       this._forecasts = {};
-      // Basemap: saved choice (default light = readable). MapTiler key,
+      // Basemap: saved choice (default dark = noir canvas). MapTiler key,
       // when configured, upgrades the dark style only.
       this.baseStyle = savedBasemap();
       document.body.dataset.basemap = this.baseStyle;
@@ -246,7 +246,9 @@
         type: 'line',
         source: 'delhi-ring',
         paint: {
-          'line-color': 'rgba(0,212,255,0.5)',
+          // Hairline white: Bugatti has no accent color — the old cyan
+          // ring was chrome. Boundary reads via dash rhythm, not hue.
+          'line-color': 'rgba(255,255,255,0.35)',
           'line-width': 1.2,
           'line-dasharray': [1, 1],
         },
@@ -415,15 +417,16 @@
     return ['interpolate', ['linear'], ['get', cfg.prop]].concat(cfg.stops);
   }
 
-  // Display override: Moderate-yellow station dots render as black,
-  // pale Satisfactory green as dark green (invisible on light basemap).
-  // (Same rule as Utils.stationDisplayColor; duplicated here so the map
-  // module never depends on utils.js load order.)
-  const DISPLAY_COLOR_MAP = { '#ffff00': '#000000', '#9cff9c': '#007a00' };
+  // Display override, basemap-aware: Moderate-yellow (#ffff00) vanishes
+  // on the light basemap (render black) but reads perfectly on dark map
+  // and dark cards (keep yellow). Duplicated here so the map module never
+  // depends on utils.js load order.
   function stationColor(hex) {
-    if (typeof hex === 'string') {
-      const hit = DISPLAY_COLOR_MAP[hex.toLowerCase()];
-      if (hit) return hit;
+    if (typeof hex === 'string' && hex.toLowerCase() === '#ffff00') {
+      try {
+        if (document.body.dataset.basemap === 'light') return '#000000';
+      } catch (e) { /* no DOM — keep source color */ }
+      return hex;
     }
     return hex;
   }

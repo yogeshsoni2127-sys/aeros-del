@@ -35,15 +35,15 @@
     return aqiCategory(aqi).color;
   }
 
-  // Display override: Moderate-yellow (#ffff00) reads poorly on light
-  // chrome, so STATION markers/rows render it as black; pale Satisfactory
-  // green (#9cff9c) is near-invisible on the light basemap, so it renders
-  // as dark green. AQI math and legends elsewhere are untouched.
-  const DISPLAY_COLOR_MAP = { '#ffff00': '#000000', '#9cff9c': '#007a00' };
+  // Display override, basemap-aware: Moderate-yellow (#ffff00) vanishes
+  // on the light basemap (render black) but reads perfectly on dark map
+  // and dark cards (keep yellow). AQI math elsewhere is untouched.
   function stationDisplayColor(hex) {
-    if (typeof hex === 'string') {
-      const hit = DISPLAY_COLOR_MAP[hex.toLowerCase()];
-      if (hit) return hit;
+    if (typeof hex === 'string' && hex.toLowerCase() === '#ffff00') {
+      try {
+        if (document.body.dataset.basemap === 'light') return '#000000';
+      } catch (e) { /* no DOM — keep source color */ }
+      return hex;
     }
     return hex;
   }
@@ -75,6 +75,22 @@
     return d.toLocaleString([], { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
   }
 
+  // Day-aware axis label ("12 Sep 14:00"): past + future share wall-clock
+  // times, so bare "14:00" labels collide across the now-line. Falls back
+  // to fmtTime when the date is unparseable.
+  function fmtDayTime(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return fmtTime(iso);
+    try {
+      const day = d.toLocaleDateString([], { day: '2-digit', month: 'short' });
+      const hm = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return `${day} ${hm}`;
+    } catch (e) {
+      return fmtTime(iso);
+    }
+  }
+
   function esc(text) {
     const div = document.createElement('div');
     div.textContent = String(text == null ? '' : text);
@@ -104,6 +120,7 @@
     wsUrl,
     fmtTime,
     fmtDT,
+    fmtDayTime,
     esc,
     clamp,
     debounce,

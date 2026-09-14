@@ -30,6 +30,12 @@ class DataPreprocessor:
     def __init__(self, database_path: str = "data/aqi_data.db"):
         self.database_path = database_path
         self._db_initialized = False
+        # Retention window: live SQLite is a rolling operational buffer,
+        # not an archive (4-yr training CSVs live in data/raw+processed).
+        # Pruning keeps the warm-up backtest honest, the disk small, and
+        # free-tier deploys fast. Validated by validate_live.py.
+        self.retention_days = 30
+        self.fire_retention_days = 14
 
     async def initialize_database(self):
         """Create SQLite tables if they don't exist."""
@@ -185,6 +191,57 @@ class DataPreprocessor:
             pass
         except Exception as e:
             logger.error(f"Failed to store readings: {e}")
+
+        # Rolling retention: prune on every store (indexed DELETE, cheap)
+        # so station_readings never grows into an unbounded archive.
+        await self.prune_old_data()
+
+    async def prune_old_data(self) -> Dict[str, int]:
+        """Delete rows older than the retention window.
+
+        Returns per-table pruned counts. Safe to call every refresh;
+        failures are logged, never raised (persistence must not break
+        the live pipeline).
+        """
+        await self.initialize_database()
+        pruned: Dict[str, int] = {}
+        try:
+            import aiosqlite
+
+            now = datetime.now(timezone.utc)
+            cutoffs = {
+                "station_readings": (
+                    now - timedelta(days=self.retention_days)).isoformat(),
+                "weather_data": (
+                    now - timedelta(days=self.retention_days)).isoformat(),
+                "forecasts": (
+                    now - timedelta(days=self.retention_days)).isoformat(),
+                "aisi_history": (
+                    now - timedelta(days=self.retention_days)).isoformat(),
+                "fire_data": (
+                    now - timedelta(days=self.fire_retention_days)).isoformat(),
+            }
+            date_col = {"fire_data": "created_at"}
+            async with aiosqlite.connect(self.database_path) as db:
+                for table, cutoff in cutoffs.items():
+                    try:
+                        col = date_col.get(table, "timestamp")
+                        cur = await db.execute(
+                            f"DELETE FROM {table} WHERE {col} < ?", (cutoff,))
+                        pruned[table] = cur.rowcount or 0
+                    except Exception as e:
+                        logger.debug("prune %s skipped: %s", table, e)
+                        pruned[table] = 0
+                await db.commit()
+            total = sum(pruned.values())
+            if total:
+                logger.info("Retention prune: removed %d rows >%dd old (%s)",
+                            total, self.retention_days, pruned)
+        except ImportError:
+            pass
+        except Exception as e:
+            logger.warning("Retention prune failed: %s", e)
+        return pruned
 
     async def get_station_history(
         self,

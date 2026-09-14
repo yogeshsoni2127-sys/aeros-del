@@ -57,6 +57,31 @@ def _count_readings(db) -> int:
         return 0
 
 
+def _history_progress(db) -> dict:
+    """Machine-readable warm-up state for the skill panel progress bar.
+
+    pairs_needed = consecutive same-sensor pairs that make the live
+    backtest meaningful. Until then the panel shows validated ensemble
+    skill instead of a blank error.
+    """
+    import sqlite3
+    readings, stations = 0, 0
+    try:
+        con = sqlite3.connect(str(db))
+        readings = int(con.execute("SELECT COUNT(*) FROM station_readings").fetchone()[0])
+        stations = int(con.execute(
+            "SELECT COUNT(DISTINCT station_id) FROM station_readings").fetchone()[0])
+        con.close()
+    except Exception:
+        pass
+    need = 50
+    # ~75 readings (25 stations x 3 consecutive cycles) yield the first
+    # usable pairs; pct is progress toward a meaningful live backtest.
+    pct = min(99, round(100 * readings / 75)) if readings else 0
+    return {"readings": readings, "stations": stations,
+            "pairs_available": 0, "pairs_needed": need, "pct": pct}
+
+
 @router.get("/summary")
 async def accuracy_summary(request: Request, include_gbm: bool = False):
     """Backtest skill of the live pipeline on SQLite history.
@@ -90,6 +115,7 @@ async def accuracy_summary(request: Request, include_gbm: bool = False):
         logger.debug("accuracy series unavailable: %s", e)
         return {"available": False,
                 "reason": "History still warming up — ensemble skill below.",
+                "history": _history_progress(db),
                 "ensemble_72h": _ensemble_72h_block()}
     if not series:
         # Normal on free-tier ephemeral disk: every deploy/restart wipes
@@ -102,6 +128,7 @@ async def accuracy_summary(request: Request, include_gbm: bool = False):
                            f"({n_read} readings stored so far — disk resets on "
                            f"each deploy). Validated 72h skill below."),
                 "readings_stored": n_read,
+                "history": _history_progress(db),
                 "ensemble_72h": _ensemble_72h_block()}
 
     skill = backtest(series)

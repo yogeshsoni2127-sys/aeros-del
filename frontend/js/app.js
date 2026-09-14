@@ -46,6 +46,8 @@
       this.forecastChart = new ForecastChart(
         document.getElementById('forecastChart')
       );
+      // Live graph-confirmation footer (same language as CI validator).
+      this.forecastChart.onVerify = (v) => this._renderVerify(v);
 
       // ── Wire UI events ─────────────────────────────────────────
       this._wireControls();
@@ -285,7 +287,7 @@
           const cur = s.current || {};
           const h24 = s.forecast_h24 || {};
           const ls = s.last_step;
-          const color = Utils.stationDisplayColor(cur.color || '#808080');
+          const color = cur.color || '#808080';
           const err = ls != null ? ls.error : null;
           const errColor = err == null ? 'var(--text-dim)' : (Math.abs(err) < 15 ? 'var(--toxic)' : (Math.abs(err) < 40 ? 'var(--amber)' : 'var(--danger)'));
           return `
@@ -347,7 +349,50 @@
               `, ±1 ${aq.aqi_within1_acc != null ? Math.round(aq.aqi_within1_acc * 100) + '%' : '—'}` +
               ` <a href="/api/v1/accuracy/model-status" target="_blank">full skill JSON</a>`;
             note.after(line);
+            // Breakdown expander: per-pollutant test RMSE + Day-1→3 grid.
+            const oldDet = document.getElementById('accBreakdown');
+            if (oldDet) oldDet.remove();
+            if (Array.isArray(e72.per_pollutant_test)) {
+              const det = document.createElement('details');
+              det.className = 'acc-note';
+              det.id = 'accBreakdown';
+              const rows = e72.per_pollutant_test.map((x) =>
+                `<tr><td>${Utils.esc(x.target.toUpperCase())}</td>` +
+                `<td>${Utils.esc(x.test_rmse)}</td>` +
+                `<td>${Utils.esc(x.test_mae)}</td></tr>`).join('');
+              const hgrid = [1, 2, 3].map((h) => {
+                const c = e72.per_horizon_backtest.filter((x) => x.horizon_h === h);
+                const cell = (t) => {
+                  const x = c.find((y) => y.target === t);
+                  return x ? `${x.rmse} (r² ${x.r2 ?? '—'})` : '—';
+                };
+                return `<tr><td>Day+${h}</td><td>${cell('pm25')}</td>` +
+                  `<td>${cell('pm10')}</td><td>${cell('no2')}</td>` +
+                  `<td>${cell('o3')}</td></tr>`;
+              }).join('');
+              det.innerHTML =
+                `<summary>MODEL BREAKDOWN — TEST RMSE / DAY-1→3</summary>` +
+                `<table class="acc-table"><tr><th>TARGET</th><th>RMSE</th><th>MAE</th></tr>${rows}</table>` +
+                `<table class="acc-table"><tr><th>HORIZON</th><th>PM2.5</th>` +
+                `<th>PM10</th><th>NO2</th><th>O3</th></tr>${hgrid}</table>`;
+              line.after(det);
+            }
           }
+        }
+        // Live-backtest warm-up progress (replaces the bare reason line).
+        if (!r.available && note && r.history) {
+          const hst = r.history;
+          const bar = document.createElement('div');
+          bar.className = 'acc-note';
+          bar.id = 'accProgress';
+          const oldBar = document.getElementById('accProgress');
+          if (oldBar) oldBar.remove();
+          const pct = Math.max(0, Math.min(100, hst.pct || 0));
+          bar.innerHTML =
+            `LIVE BACKTEST WARMING UP — ${hst.readings || 0} READINGS · ` +
+            `${hst.stations || 0} STATIONS · ${pct}% TO FIRST SCORED PAIRS` +
+            `<div class="acc-bar"><span style="width:${pct}%"></span></div>`;
+          note.after(bar);
         }
         if (!r.available) {
           if (note) note.textContent = (r.reason || 'No history yet — run server longer.');
@@ -370,6 +415,29 @@
       } catch (e) {
         if (note) note.textContent = 'Skill unavailable (backend offline).';
       }
+    },
+
+    _renderVerify(v) {
+      const el = document.getElementById('forecastVerify');
+      if (!el) return;
+      if (!v || !v.nFc) {
+        el.textContent = 'VERIFYING GRAPH…';
+        el.dataset.state = 'pending';
+        return;
+      }
+      const gaps = this.forecastChart?.gapCount || 0;
+      const bits = [
+        v.monotonic ? 'TIME ✓' : 'TIME ✗',
+        v.bandBreach === 0 ? 'BAND ✓' : `BAND ✗${v.bandBreach}`,
+        v.dailyDrift === 0 ? 'DAILY ✓' : `DAILY ✗${v.dailyDrift}`,
+        v.fullLength ? `${v.nObs} OBS → ${v.nFc} FC` : `SHORT ✗${v.nFc}`,
+      ];
+      if (gaps) bits.push(`⚠ ${gaps} GAP${gaps > 1 ? 'S' : ''}`);
+      el.textContent = `GRAPH CHECK — ${bits.join(' · ')}`;
+      el.dataset.state = v.ok ? 'ok' : 'fail';
+      el.title = v.ok
+        ? 'Passed: hourly timestamps monotonic, median inside band, 24h means == daily model.'
+        : 'Failed — see model notes; validator reports the same failure in CI.';
     },
 
     _tickerMeta() {
@@ -447,12 +515,11 @@
     _renderAisi(aisi) {
       if (!aisi || aisi.aisi == null) return;
       const a = aisi.aisi;
-      const color = Utils.stationDisplayColor(
-        aisi.color || Utils.aqiColor(Math.min(500, a * 50)));
+      const color = aisi.color || Utils.aqiColor(Math.min(500, a * 50));
       this.aisiGauge.update(a, color);
 
       document.getElementById('aisiValue').textContent = a.toFixed(1);
-      document.getElementById('aisiValue').style.color = color;
+      document.getElementById('aisiValue').style.color = '#ffffff';
       document.getElementById('aisiValue').style.textShadow = 'none';
       document.getElementById('aisiCategory').textContent = aisi.category || '—';
 
@@ -505,7 +572,7 @@
         .sort((a, b) => (b.current?.aqi || 0) - (a.current?.aqi || 0))
         .map((s) => {
           const c = s.current || {};
-          const color = Utils.stationDisplayColor(c.color || '#808080');
+          const color = c.color || '#808080';
           const sel = this.state.selectedStation === s.id ? 'selected' : '';
           const histN = s.history_count != null ? s.history_count : ((s.history || []).length);
           const stale = histN < 6 ? ' · only ' + histN + ' pts' : ' · ' + histN + ' pts';
@@ -556,9 +623,11 @@
           ? ` · ${forecast.provenance}` : '';
         document.getElementById('modelNotes').textContent =
           `Ensemble: ${model.join(' + ') || 'statistical baseline'} · ${forecast.timestamps.length}h` +
-          (histN ? ` · green = observed past ${Math.min(histN, 24)} readings` : '') +
+          (histN ? ` · grey = observed past ${Math.min(histN, 48)} readings` : '') +
           (gaps ? ` · ⚠ ${gaps} data gap${gaps > 1 ? 's' : ''} in history` : '') +
           (daily ? ` · Daily model: ${daily}` : '') + prov;
+        // Footer audit runs via onVerify; force one paint for cached paths.
+        this._renderVerify(this.forecastChart.getVerification());
       }
 
       // Keep map in sync with selected station
