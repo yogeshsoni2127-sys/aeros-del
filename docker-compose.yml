@@ -15,6 +15,7 @@ services:
       NASA_FIRMS_API_KEY: "${NASA_FIRMS_API_KEY:-}"
       GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
       MAPTILER_KEY: "${MAPTILER_KEY:-}"
+      CARTO_KEY: "${CARTO_KEY:-}"
       DATA_REFRESH_INTERVAL: "300"
     volumes:
       - ./data:/app/data

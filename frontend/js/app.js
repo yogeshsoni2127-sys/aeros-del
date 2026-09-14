@@ -25,15 +25,18 @@
       this.live.onMessage((msg) => this.onServerMessage(msg));
 
       // Public client config first (map tiles) — tiny, fast endpoint.
-      let mapKey = null;
+      let mapKeys = {};
       try {
         const cfg = await Utils.fetchJSON('/api/v1/config');
-        mapKey = cfg.maptiler_key || null;
+        mapKeys = {
+          maptilerKey: cfg.maptiler_key || null,
+          cartoKey: cfg.carto_key || null,
+        };
       } catch (e) {
         console.warn('config fetch failed — using default basemap', e);
       }
 
-      this.map = new AeriMap('map', mapKey);
+      this.map = new AeriMap('map', mapKeys);
       this.map.onStationClick = (id) => this.selectStation(id);
 
       this.plume = new PlumeOverlay(this.map.map);

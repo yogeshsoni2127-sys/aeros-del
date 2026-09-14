@@ -9,16 +9,24 @@
   // Readable first: 'light' (Voyager) is the default — the Neobrutalism
   // theme is a warm light surface. Users can switch to dark anytime; the
   // choice persists in localStorage.
-  const BASE_STYLES = {
-    light: {
-      tiles: ['https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png'],
-      attr: '© OpenStreetMap contributors © CARTO',
-    },
-    dark: {
-      tiles: ['https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'],
-      attr: '© OpenStreetMap contributors © CARTO',
-    },
-  };
+  // CARTO raster now requires an API key (free at
+  // carto.com/basemaps/apikey): with a key we use CARTO tiles, without
+  // one we fall back to plain OpenStreetMap standard tiles. The host
+  // switch also busts any watermarked-tile caches from before the key
+  // requirement — no localStorage migration needed.
+  function baseTiles(style, cartoKey) {
+    if (cartoKey) {
+      const variant = style === 'light' ? 'rastertiles/voyager' : 'dark_all';
+      return [`https://basemaps.cartocdn.com/${variant}/{z}/{x}/{y}.png?key=${cartoKey}`];
+    }
+    return ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'];
+  }
+
+  function baseAttribution(cartoKey) {
+    return cartoKey
+      ? '© OpenStreetMap contributors © CARTO'
+      : '© OpenStreetMap contributors';
+  }
 
   function maptilerTiles(key) {
     return [`https://api.maptiler.com/maps/darkmatter/{z}/{x}/{y}.png?key=${key}`];
@@ -35,7 +43,10 @@
   // backend snapshot. Fires render as #ff3838 dots, unchanged.
 
   class AeriMap {
-    constructor(containerId, maptilerKey) {
+    // opts: { maptilerKey, cartoKey }. Backward compat: a bare string
+    // second arg is treated as the MapTiler key.
+    constructor(containerId, opts) {
+      const o = (typeof opts === 'string') ? { maptilerKey: opts } : (opts || {});
       this.container = document.getElementById(containerId);
       this.onStationClick = null;
       this.currentHour = 0;
@@ -44,13 +55,14 @@
       // when configured, upgrades the dark style only.
       this.baseStyle = savedBasemap();
       document.body.dataset.basemap = this.baseStyle;
-      let tiles = BASE_STYLES[this.baseStyle].tiles;
-      let attribution = BASE_STYLES[this.baseStyle].attr;
-      if (maptilerKey && this.baseStyle === 'dark') {
-        tiles = maptilerTiles(maptilerKey);
+      this._maptilerKey = o.maptilerKey || null;
+      this._cartoKey = o.cartoKey || null;
+      let tiles = baseTiles(this.baseStyle, this._cartoKey);
+      let attribution = baseAttribution(this._cartoKey);
+      if (this._maptilerKey && this.baseStyle === 'dark') {
+        tiles = maptilerTiles(this._maptilerKey);
         attribution = '© MapTiler © OpenStreetMap contributors';
       }
-      this._maptilerKey = maptilerKey || null;
       this.map = new maplibregl.Map({
         container: this.container,
         style: {
@@ -60,6 +72,7 @@
               type: 'raster',
               tiles: tiles,
               tileSize: 256,
+              maxzoom: 19,
               attribution: attribution,
             },
           },
@@ -92,7 +105,7 @@
     }
 
     setBasemap(name) {
-      if (!BASE_STYLES[name]) return;
+      if (name !== 'light' && name !== 'dark') return;
       this.baseStyle = name;
       try { localStorage.setItem('aeros-basemap', name); } catch (e) { /* ignore */ }
       document.body.dataset.basemap = name;
@@ -100,8 +113,10 @@
         b.classList.toggle('active', b.dataset.baseBtn === name);
       });
       if (!this.map.isStyleLoaded()) return;
-      let tiles = BASE_STYLES[name].tiles;
-      let attribution = BASE_STYLES[name].attr;
+      // Rebuild via the same builder so the Light/Dark toggle never
+      // reverts to a stale (e.g. watermarked keyless-CARTO) URL.
+      let tiles = baseTiles(name, this._cartoKey);
+      let attribution = baseAttribution(this._cartoKey);
       if (this._maptilerKey && name === 'dark') {
         tiles = maptilerTiles(this._maptilerKey);
         attribution = '© MapTiler © OpenStreetMap contributors';
@@ -110,7 +125,7 @@
       if (this.map.getLayer('base')) this.map.removeLayer('base');
       if (this.map.getSource('base')) this.map.removeSource('base');
       this.map.addSource('base', {
-        type: 'raster', tiles: tiles, tileSize: 256, attribution: attribution,
+        type: 'raster', tiles: tiles, tileSize: 256, maxzoom: 19, attribution: attribution,
       });
       const before = this.map.getLayer('pm25-heat') ? 'pm25-heat' : undefined;
       this.map.addLayer({ id: 'base', type: 'raster', source: 'base' }, before);

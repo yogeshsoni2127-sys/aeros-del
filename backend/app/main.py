@@ -186,6 +186,7 @@ async def public_config():
     """Non-secret client configuration (map tiles, refresh cadence)."""
     return {
         "maptiler_key": settings.maptiler_key or None,
+        "carto_key": settings.carto_key or None,
         "refresh_interval_s": settings.data_refresh_interval,
         "forecast_horizon_h": settings.forecast_horizon_hours,
     }

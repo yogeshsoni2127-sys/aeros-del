@@ -30,5 +30,7 @@ services:
         sync: false
       - key: MAPTILER_KEY
         sync: false
+      - key: CARTO_KEY
+        sync: false
       - key: OPENWEATHER_API_KEY
         sync: false

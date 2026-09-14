@@ -87,7 +87,8 @@ Missing keys = automatic demo fallback, no crash.
 | `OPENWEATHER_API_KEY` | openweathermap.org | (optional, Open-Meteo is default) |
 | `NASA_FIRMS_API_KEY` | firms.modaps.eosdis.nasa.gov | Fire hotspots |
 | `GEMINI_API_KEY` | aistudio.google.com | LLM advisory rephrase (optional) |
-| `MAPTILER_KEY` | maptiler.com | Premium basemap (optional, CARTO free by default) |
+| `MAPTILER_KEY` | maptiler.com | Premium dark basemap (optional, OSM default otherwise) |
+| `CARTO_KEY` | carto.com/basemaps/apikey (free) | CARTO raster basemap — key now required, OSM default without |
 | `DEMO_MODE` | `true`/`false` | Force offline demo |
 | `DATA_REFRESH_INTERVAL` | seconds (default 300) | Refresh cycle |
 
@@ -202,7 +203,7 @@ Localhost works only on your PC. For a judge-friendly URL pick one:
 - Python service: `backend/requirements.txt` — FastAPI, Uvicorn, httpx, numpy/pandas/scipy, aiosqlite, python-dotenv, scikit-learn; optional `xgboost`, `lightgbm`, `torch`, `google-genai` (app runs without them in baseline + local-NLP mode)
 - Host port `8000` exposed (Render/Railway set `PORT` env — `run.py` already reads it)
 - Persistent disk for `data/aqi_data.db` (else history resets each deploy — fine for demo)
-- API keys (all optional — missing keys = demo fallback, nothing crashes): `OPENAQ_API_KEY` (live PM), `NASA_FIRMS_API_KEY` (fires), `GEMINI_API_KEY` (LLM advisories), `MAPTILER_KEY` (premium basemap; free CARTO default otherwise)
+- API keys (all optional — missing keys = demo fallback, nothing crashes): `OPENAQ_API_KEY` (live PM), `NASA_FIRMS_API_KEY` (fires), `GEMINI_API_KEY` (LLM advisories), `MAPTILER_KEY` (premium basemap; OSM default otherwise), `CARTO_KEY` (CARTO raster without watermark; OSM default otherwise)
 - Open-Meteo needs no key. Outbound HTTPS to `api.openaq.org`, `api.open-meteo.com`, FIRMS must be allowed (default on Render/Railway)
 - `DEMO_MODE=false`, `DATA_REFRESH_INTERVAL=300` as env vars
 
