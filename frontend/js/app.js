@@ -369,6 +369,29 @@
               `, ±1 ${aq.aqi_within1_acc != null ? Math.round(aq.aqi_within1_acc * 100) + '%' : '—'}` +
               ` <a href="/api/v1/accuracy/model-status" target="_blank">full skill JSON</a>`;
             note.after(line);
+            // Live Day+1 check for the SERVED model: persisted Day+1
+            // preds vs realised means (tree-only research daily). Warms
+            // up over days; research backtest above stays the headline.
+            const oldDl = document.getElementById('accDailyLive');
+            if (oldDl) oldDl.remove();
+            const dl = r.daily_live || {};
+            if (dl.ready && dl.n >= 5) {
+              const dline = document.createElement('div');
+              dline.className = 'acc-note';
+              dline.id = 'accDailyLive';
+              dline.innerHTML =
+                `LIVE Day+1 check (served XGB+LGBM, ${dl.n} pairs): ` +
+                `PM2.5 MAE ${dl.pm25_mae} · RMSE ${dl.pm25_rmse} µg/m³` +
+                (dl.aqi_mae != null ? ` · AQI MAE ${dl.aqi_mae}` : '');
+              line.after(dline);
+            } else if ((dl.n || 0) > 0) {
+              const dline = document.createElement('div');
+              dline.className = 'acc-note';
+              dline.id = 'accDailyLive';
+              dline.textContent =
+                `LIVE Day+1 check warming up — ${dl.n} pairs so far (need 5).`;
+              line.after(dline);
+            }
             // Breakdown expander: per-pollutant test RMSE + Day-1→3 grid.
             const oldDet = document.getElementById('accBreakdown');
             if (oldDet) oldDet.remove();

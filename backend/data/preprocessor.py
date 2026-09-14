@@ -277,6 +277,189 @@ class DataPreprocessor:
             logger.error(f"Failed to get history: {e}")
             return []
 
+    async def get_daily_means(self, days: int = 60) -> Dict[str, Dict]:
+        """IST-day pollutant means per station for research-daily tails.
+
+        Returns {station_id: {YYYY-MM-DD: {pm25: {mean, n}, ...}}}.
+        Hourly readings bucketed by IST date (UTC grouping would split
+        Delhi nights across days).
+        """
+        await self.initialize_database()
+        try:
+            import aiosqlite
+
+            cutoff = (datetime.now(timezone.utc)
+                      - timedelta(days=days)).isoformat()
+            async with aiosqlite.connect(self.database_path) as db:
+                db.row_factory = aiosqlite.Row
+                cursor = await db.execute(
+                    """
+                    SELECT station_id, timestamp, pm25, pm10, no2, o3
+                    FROM station_readings
+                    WHERE timestamp >= ?
+                    ORDER BY station_id, timestamp ASC
+                    """,
+                    (cutoff,),
+                )
+                rows = await cursor.fetchall()
+        except ImportError:
+            return {}
+        except Exception as e:
+            logger.error(f"Failed to get daily means: {e}")
+            return {}
+
+        from datetime import timedelta as _td
+        ist = timezone(_td(hours=5, minutes=30))
+        acc: Dict[str, Dict[str, Dict[str, list]]] = {}
+        for r in rows:
+            try:
+                dt = datetime.fromisoformat(
+                    str(r["timestamp"]).replace("Z", "+00:00"))
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                day = dt.astimezone(ist).date().isoformat()
+            except (ValueError, TypeError):
+                continue
+            slot = acc.setdefault(r["station_id"], {}).setdefault(day, {})
+            for pol in ("pm25", "pm10", "no2", "o3"):
+                try:
+                    v = float(r[pol]) if r[pol] is not None else None
+                except (TypeError, ValueError):
+                    v = None
+                if v is not None:
+                    slot.setdefault(pol, []).append(v)
+        out: Dict[str, Dict] = {}
+        for sid, days_map in acc.items():
+            out[sid] = {}
+            for day, pols in days_map.items():
+                out[sid][day] = {
+                    p: {"mean": round(sum(v) / len(v), 1), "n": len(v)}
+                    for p, v in pols.items() if v
+                }
+        return out
+
+    async def store_daily_predictions(self, rows: List[Dict]) -> int:
+        """Persist research Day+1 predictions for live skill scoring.
+
+        Each row: station_id, date (Day+1 ISO), pm25, pm10, no2, o3, aqi.
+        Stored at horizon_hours=24 under model='research-daily'.
+        """
+        await self.initialize_database()
+        try:
+            import aiosqlite
+
+            now = datetime.now(timezone.utc).isoformat()
+            async with aiosqlite.connect(self.database_path) as db:
+                for r in rows:
+                    await db.execute(
+                        """
+                        INSERT OR REPLACE INTO forecasts
+                        (station_id, forecast_timestamp, created_at,
+                         horizon_hours, pm25_pred, pm10_pred, aqi_pred, model)
+                        VALUES (?, ?, ?, 24, ?, ?, ?, 'research-daily')
+                        """,
+                        (r.get("station_id"), r.get("date"), now,
+                         r.get("pm25"), r.get("pm10"), r.get("aqi")),
+                    )
+                await db.commit()
+                return len(rows)
+        except ImportError:
+            return 0
+        except Exception as e:
+            logger.error(f"Failed to store daily predictions: {e}")
+            return 0
+
+    async def get_daily_predictions_for(self, day_iso: str) -> Dict[str, Dict]:
+        """Research Day+1 predictions targeting one IST date."""
+        await self.initialize_database()
+        try:
+            import aiosqlite
+
+            async with aiosqlite.connect(self.database_path) as db:
+                db.row_factory = aiosqlite.Row
+                cursor = await db.execute(
+                    """
+                    SELECT station_id, pm25_pred, pm10_pred, aqi_pred
+                    FROM forecasts
+                    WHERE horizon_hours = 24 AND model = 'research-daily'
+                      AND substr(forecast_timestamp, 1, 10) = ?
+                    """,
+                    (day_iso,),
+                )
+                return {r["station_id"]: dict(r)
+                        for r in await cursor.fetchall()}
+        except ImportError:
+            return {}
+        except Exception as e:
+            logger.error(f"Failed to get daily predictions: {e}")
+            return {}
+
+    async def get_daily_skill(self, days: int = 14) -> Dict:
+        """Live Day+1 skill: persisted research preds vs realised means.
+
+        Pairs each stored Day+1 pm25/aqi prediction with the day's
+        realised IST mean from station_readings. Returns {} until >= 5
+        pairs exist (warming-up pattern, like the live backtest).
+        """
+        await self.initialize_database()
+        try:
+            import aiosqlite
+
+            cutoff = (datetime.now(timezone.utc)
+                      - timedelta(days=days)).isoformat()
+            async with aiosqlite.connect(self.database_path) as db:
+                db.row_factory = aiosqlite.Row
+                preds = await (await db.execute(
+                    """
+                    SELECT station_id,
+                           substr(forecast_timestamp, 1, 10) AS day,
+                           pm25_pred, aqi_pred
+                    FROM forecasts
+                    WHERE horizon_hours = 24 AND model = 'research-daily'
+                      AND created_at >= ?
+                    """,
+                    (cutoff,),
+                )).fetchall()
+                if len(preds) < 5:
+                    return {"n": len(preds), "ready": False}
+                errs, aqis = [], []
+                for p in preds:
+                    cur = await db.execute(
+                        """
+                        SELECT AVG(pm25) AS m25, AVG(aqi) AS ma
+                        FROM station_readings
+                        WHERE station_id = ?
+                          AND substr(timestamp, 1, 10) = ?
+                        """,
+                        (p["station_id"], p["day"]),
+                    )
+                    row = await cur.fetchone()
+                    # NOTE: readings store UTC timestamps while forecast
+                    # days are IST dates; boundary hours can fall on the
+                    # adjacent UTC date. Tolerance, not precision, is the
+                    # goal — pairs still measure real Day+1 error.
+                    if row and row["m25"] is not None and \
+                            p["pm25_pred"] is not None:
+                        errs.append(float(p["pm25_pred"]) - float(row["m25"]))
+                    if row and row["ma"] is not None and \
+                            p["aqi_pred"] is not None:
+                        aqis.append(float(p["aqi_pred"]) - float(row["ma"]))
+        except ImportError:
+            return {}
+        except Exception as e:
+            logger.error(f"Failed daily skill: {e}")
+            return {}
+        if len(errs) < 5:
+            return {"n": len(errs), "ready": False}
+        import math
+        mae = sum(abs(e) for e in errs) / len(errs)
+        rmse = math.sqrt(sum(e * e for e in errs) / len(errs))
+        out = {"ready": True, "n": len(errs),
+               "pm25_mae": round(mae, 1), "pm25_rmse": round(rmse, 1)}
+        if len(aqis) >= 5:
+            out["aqi_mae"] = round(sum(abs(e) for e in aqis) / len(aqis), 1)
+        return out
+
     def clean_reading(
         self,
         reading: Dict,

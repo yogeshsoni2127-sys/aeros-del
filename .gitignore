@@ -4,3 +4,4 @@ __pycache__/
 .venv/
 data/aqi_data.db
 data/weather_history.json
+lightning_logs/

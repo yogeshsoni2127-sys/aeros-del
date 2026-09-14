@@ -133,6 +133,16 @@ async def accuracy_summary(request: Request, include_gbm: bool = False):
 
     skill = backtest(series)
 
+    # ── Live Day+1 skill for the served research-daily model ──────────
+    # Persisted Day+1 predictions scored against realised means. Starts
+    # empty after each deploy (ephemeral disk) and warms up within days;
+    # until then the validated research backtest below is the headline.
+    try:
+        daily_live = await service.preprocessor.get_daily_skill(days=14)
+    except Exception as e:
+        logger.debug("daily skill unavailable: %s", e)
+        daily_live = {}
+
     # ── Predictive score + loss (judge-friendly rollups) ──
     # skill_score per bucket: +20% means 20% lower MAE than persistence.
     scores = {}
@@ -158,6 +168,7 @@ async def accuracy_summary(request: Request, include_gbm: bool = False):
         "buckets": {k: skill.get(k, {}) for k in ("<=1h", "1-6h", ">6h")},
         "skill_vs_persistence": scores,
         "pearson_r_baseline": skill.get("pearson_r_baseline", 0.0),
+        "daily_live": daily_live,
         "ensemble_72h": _ensemble_72h_block(),
         "how_to_read": {
             "mae": "Mean absolute error µg/m³ (lower = better).",
@@ -167,6 +178,8 @@ async def accuracy_summary(request: Request, include_gbm: bool = False):
                                    "+0.20 = 20% better.",
             "cat_acc": "Fraction where predicted AQI category == actual.",
             "pearson_r": "Correlation of predicted vs actual (1 = perfect).",
+            "daily_live": "Served research-daily Day+1 predictions scored "
+                          "against realised means (warms up after deploy).",
         },
     }
     if include_gbm:
@@ -252,6 +265,17 @@ async def accuracy_stations(request: Request):
     """
     service = _get_service(request)
     rows = []
+    # Served-model Day+1 errors: yesterday's persisted research preds for
+    # TODAY vs today's realised mean (falls back to the baseline nowcast
+    # check per row when unavailable).
+    from datetime import datetime as _dt, timedelta as _td, timezone as _tz
+    _ist = _tz(_td(hours=5, minutes=30))
+    _today = _dt.now(_tz.utc).astimezone(_ist).date().isoformat()
+    try:
+        day1_pred_map = await service.preprocessor.get_daily_predictions_for(
+            _today)
+    except Exception:
+        day1_pred_map = {}
     for s in service.get_stations():
         cur = s.get("current") or {}
         pol = cur.get("pollutants", {}) if cur else {}
@@ -271,32 +295,61 @@ async def accuracy_stations(request: Request):
         hist = s.get("history") or []
         last_step = None
         try:
-            if len(hist) >= 2 and hist[-1].get("pm25") is not None:
-                from backend.ml.xgboost_forecaster import statistical_baseline
-                actual = float(hist[-1]["pm25"])
-                prev = [h.get("pm25") for h in hist[:-1]
-                        if h.get("pm25") is not None]
-                if prev:
-                    h = 1
+            dp = day1_pred_map.get(s["id"]) or {}
+            if dp.get("pm25_pred") is not None:
+                vals = []
+                for hrow in hist:
                     try:
-                        from datetime import datetime as _dt
-                        t1 = _dt.fromisoformat(str(hist[-1].get("timestamp")).replace("Z", "+00:00"))
-                        t0 = _dt.fromisoformat(str(hist[-2].get("timestamp")).replace("Z", "+00:00"))
-                        h = max(1, min(72, round((t1 - t0).total_seconds() / 3600)))
+                        t = _dt.fromisoformat(
+                            str(hrow.get("timestamp")).replace("Z", "+00:00"))
+                        if t.tzinfo is None:
+                            t = t.replace(tzinfo=_tz.utc)
+                        if t.astimezone(_ist).date().isoformat() == _today \
+                                and hrow.get("pm25") is not None:
+                            vals.append(float(hrow["pm25"]))
                     except Exception:
-                        pass
-                    base = statistical_baseline(
-                        current_pm25=prev[-1], history_pm25=prev, horizon=h)
-                    pred = float(base["pm25"][h - 1])
+                        continue
+                if len(vals) >= 3:
+                    actual = sum(vals) / len(vals)
+                    pred = float(dp["pm25_pred"])
                     last_step = {
                         "actual": round(actual, 1),
                         "predicted": round(pred, 1),
                         "error": round(pred - actual, 1),
                         "abs_error": round(abs(pred - actual), 1),
-                        "horizon_h": h,
+                        "horizon_h": 24,
+                        "model": "research-daily",
                     }
         except Exception as e:
-            logger.debug("last-step error failed for %s: %s", s["id"], e)
+            logger.debug("day1 error failed for %s: %s", s["id"], e)
+        if last_step is None:
+            try:
+                if len(hist) >= 2 and hist[-1].get("pm25") is not None:
+                    from backend.ml.xgboost_forecaster import statistical_baseline
+                    actual = float(hist[-1]["pm25"])
+                    prev = [h.get("pm25") for h in hist[:-1]
+                            if h.get("pm25") is not None]
+                    if prev:
+                        h = 1
+                        try:
+                            from datetime import datetime as _dt
+                            t1 = _dt.fromisoformat(str(hist[-1].get("timestamp")).replace("Z", "+00:00"))
+                            t0 = _dt.fromisoformat(str(hist[-2].get("timestamp")).replace("Z", "+00:00"))
+                            h = max(1, min(72, round((t1 - t0).total_seconds() / 3600)))
+                        except Exception:
+                            pass
+                        base = statistical_baseline(
+                            current_pm25=prev[-1], history_pm25=prev, horizon=h)
+                        pred = float(base["pm25"][h - 1])
+                        last_step = {
+                            "actual": round(actual, 1),
+                            "predicted": round(pred, 1),
+                            "error": round(pred - actual, 1),
+                            "abs_error": round(abs(pred - actual), 1),
+                            "horizon_h": h,
+                        }
+            except Exception as e:
+                logger.debug("last-step error failed for %s: %s", s["id"], e)
         rows.append({
             "station_id": s["id"],
             "short_name": s.get("short_name"),

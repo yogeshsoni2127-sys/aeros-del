@@ -1,0 +1,21 @@
+# SIH — ML inference stack (trained-prediction pipeline).
+# Installed alongside requirements-core.txt on deploy targets that serve
+# model predictions (see render.yaml buildCommand). Local/dev installs
+# can use backend/requirements.txt instead (same ML pins, plus extras).
+#
+# Without these, the service degrades gracefully:
+#   - research-daily bridge -> baseline + frozen overlay only
+#   - TFT member -> tree-only blend (documented fallback)
+# model-status exposes exactly which members are live, so a missing
+# wheel is always visible, never silent.
+
+# Tree models (research-daily Day+1/2/3, CSV-trained native weights)
+xgboost>=2.0
+lightgbm>=4.0
+
+# TFT member (pytorch-forecasting TemporalFusionTransformer checkpoints)
+# NOTE: torch 2.10 + Python 3.14 need forecasting>=1.5 / lightning>=2.5.
+# Render pins Python 3.12 (render.yaml) where these wheels are mature.
+torch>=2.3
+pytorch-forecasting>=1.0
+pytorch-lightning>=2.0
