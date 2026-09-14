@@ -7,15 +7,22 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=DM+Mono:wght@400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/dashboard.css">
   <link rel="stylesheet" href="css/components.css">
   <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/cursor-pattern.css">
 </head>
 <body>
+  <!-- Cursor-reactive background pattern layers (pointer-events: none) -->
+  <div id="bg-static-grid" aria-hidden="true"></div>
+  <div id="bg-vignette" aria-hidden="true"></div>
+  <div id="bg-cursor-pattern" aria-hidden="true"></div>
+  <div id="cursorGlow" aria-hidden="true"></div>
+  <div id="cursorDot" aria-hidden="true"></div>
   <!-- ═══════════════════ Header ═══════════════════ -->
   <header class="topbar glass">
     <div class="brand">
@@ -258,6 +265,7 @@
   <script src="js/map.js"></script>
   <script src="js/plume.js"></script>
   <script src="js/alerts.js"></script>
+  <script src="js/cursor-pattern.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

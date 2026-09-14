@@ -1,102 +1,106 @@
 /* ═══════════════════════════════════════════════════════════════
-   AEROS — Design System & Tokens (Neobrutalism edition)
-   Warm off-white surface, bold ink borders, vivid accents, hard
-   offset shadows. High contrast, raw, flat. Inter everywhere;
-   JetBrains Mono for caps labels only.
+   AEROS — Design System & Tokens (Warp-inspired edition)
+   Warm near-charcoal canvas, quiet Inter type with negative tracking,
+   DM Mono for terminal/technical moments, Instrument Serif italic for
+   rare editorial accents. Flat hairlines, tight radii, no shadows.
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 
-  /* ── Neobrutalism palette ───────────────────────────────────── */
-  --primary: #FDC800;
-  --secondary: #432DD7;
-  --success: #16A34A;
-  --warning: #D97706;
-  --danger: #DC2626;
-  --surface: #FBFBF9;
-  --neutral: #FBFBF9;
-  --text: #1C293C;
-  --ink: #1C293C;
-  --card: #ffffff;
-  --muted: #5b6b82;
-  --muted-soft: #8a97a8;
-  --border: #1C293C;
-  --hairline: #1C293C;
-  --hairline-strong: #1C293C;
+  /* ── Warp palette ───────────────────────────────────────────── */
+  --primary: #f7f5f0;
+  --on-primary: #2b2622;
+  --ink: #f7f5f0;
+  --body: #c9c0ad;
+  --body-strong: #dad2c1;
+  --mute: #aea69c;
+  --canvas: #2b2622;
+  --canvas-soft: #383330;
+  --hairline: #3f3a36;
 
   /* ── Legacy aliases (layout/JS keep working) ────────────────── */
-  --canvas: var(--surface);
-  --surface-soft: #f1efe9;
-  --surface-card: var(--card);
-  --surface-elevated: #f1efe9;
-  --bg-deep: var(--surface);
-  --bg-panel: var(--surface);
-  --bg-panel-strong: var(--card);
-  --electric: var(--secondary);
-  --primary-pressed: #e0ad00;
-  --primary-focus: #FDC800;
-  --primary-on-dark: #1C293C;
-  --on-dark: #1C293C;
-  --body: #33415c;
-  --body-strong: #1C293C;
-  --link: #432DD7;
-  --toxic: var(--success);
-  --amber: var(--warning);
+  --surface: var(--canvas);
+  --neutral: var(--canvas);
+  --card: var(--canvas-soft);
+  --surface-soft: var(--canvas-soft);
+  --surface-card: var(--canvas-soft);
+  --surface-elevated: #44403b;
+  --bg-deep: var(--canvas);
+  --bg-panel: var(--canvas);
+  --bg-panel-strong: var(--canvas-soft);
+  --electric: var(--ink);
+  --primary-pressed: #e8e2d5;
+  --primary-focus: #f7f5f0;
+  --primary-on-dark: #2b2622;
+  --on-dark: var(--ink);
+  --text: var(--ink);
+  --link: #f7f5f0;
+  --toxic: #7ee2a8;
+  --success: #7ee2a8;
+  --amber: #e8b04b;
+  --warning: #e8b04b;
+  --danger: #e5484d;
   --commerce: var(--primary);
-  --glass: var(--card);
-  --glass-border: var(--border);
-  --text-strong: var(--text);
+  --glass: var(--canvas-soft);
+  --glass-border: var(--hairline);
+  --text-strong: var(--ink);
   --text-mid: var(--body);
-  --text-dim: var(--muted);
+  --text-dim: var(--mute);
+  --muted: var(--mute);
+  --muted-soft: #7d766c;
+  --hairline-strong: #544e47;
+  --border: var(--hairline);
 
-  /* AQI scale (data semantics — unchanged, reads on light cards) */
-  --aqi-good: #16A34A;
-  --aqi-satisfactory: #4caf6d;
-  --aqi-moderate: #D97706;
-  --aqi-poor: #c2570b;
-  --aqi-vpoor: #DC2626;
-  --aqi-severe: #99004c;
-  --aqi-severe-plus: #7e0023;
+  /* AQI scale (data semantics — bright enough for warm dark) */
+  --aqi-good: #00e400;
+  --aqi-satisfactory: #9cff9c;
+  --aqi-moderate: #ffff00;
+  --aqi-poor: #ff7e00;
+  --aqi-vpoor: #ff5252;
+  --aqi-severe: #c2185b;
+  --aqi-severe-plus: #8e0038;
 
-  /* ── Type: Inter + JetBrains Mono caps ──────────────────────── */
-  --font-display: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-text: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono2: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  /* ── Type: Inter / DM Mono / Instrument Serif ───────────────── */
+  --font-display: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-text: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono2: 'DM Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
   --font-head: var(--font-display);
   --font-data: var(--font-mono2);
   --font-body: var(--font-text);
 
-  /* ── Shape: sm 4px / md 8px, 2px ink borders ────────────────── */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 8px;
-  --radius-pill: 8px;
-  --border-w: 2px;
+  /* ── Shape: tight, pills only for icons/status ──────────────── */
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-pill: 9999px;
 
-  /* ── Elevation: hard offset shadows, zero blur ──────────────── */
-  --shadow-pop: 4px 4px 0 var(--ink);
-  --shadow-pop-sm: 3px 3px 0 var(--ink);
-  --shadow-panel: var(--shadow-pop);
-  --shadow-press: 1px 1px 0 var(--ink);
+  /* ── Elevation: hairlines only, no shadows ──────────────────── */
+  --shadow-pop: none;
+  --shadow-pop-sm: none;
+  --shadow-panel: none;
+  --shadow-press: none;
+  --border-w: 1px;
 
-  /* ── Spacing: 4/8/12/16/24/32 ──────────────────────────────── */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 24px;
-  --space-6: 32px;
-  --space-section: 32px;
+  /* ── Spacing: 2/4/8/10/16/24/32/48/64/96 ───────────────────── */
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 8px;
+  --space-4: 10px;
+  --space-5: 16px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-section: 48px;
 }
 
-/* ── Screen-visibility auto contrast ────────────────────────────
-   Light theme: boost border/text weight on dim screens instead of
-   changing hue. */
+/* ── Screen-visibility: warm dark theme ─────────────────────────
+   Legibility comes from surface contrast + weight, never hue. */
 @media (prefers-contrast: more) {
   :root {
-    --muted: #3d4a60;
-    --muted-soft: #55647a;
+    --body: #ddd6c6;
+    --mute: #c4bcad;
+    --hairline: #544e47;
   }
 }
 
@@ -112,45 +116,51 @@ html, body {
 
 body {
   font-family: var(--font-body);
-  font-size: 0.9375rem;
+  font-size: 16px;
   font-weight: 400;
-  line-height: 1.5;
+  line-height: 24px;
   letter-spacing: 0;
-  background: var(--surface);
-  color: var(--text);
+  background: var(--canvas);
+  color: var(--body);
   overflow: hidden;
 }
 
 h1, h2, h3 {
   font-family: var(--font-head);
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  text-transform: none;
+  font-weight: 500;
+  letter-spacing: -0.8px;
+  color: var(--ink);
 }
 
 .accent {
-  color: var(--secondary);
+  color: var(--ink);
 }
 
-/* Scrollbars: light brutalist */
+/* Scrollbars: warm hairline */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-track { background: var(--canvas); }
 ::-webkit-scrollbar-thumb {
-  background: var(--ink);
+  background: var(--hairline-strong);
   border-radius: var(--radius-sm);
-  border: 2px solid var(--surface);
+  border: 2px solid var(--canvas);
 }
 
 /* Utility */
 .mono { font-family: var(--font-data); }
+.serif-accent {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.5px;
+}
 .dim { color: var(--text-dim); }
 .strong { color: var(--text-strong); }
 
 button, input { font-family: var(--font-body); outline: none; }
 button:focus-visible, input:focus-visible {
-  outline: 3px solid var(--secondary);
-  outline-offset: 1px;
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
 }
-button:active { transform: translate(2px, 2px); box-shadow: var(--shadow-press) !important; }
+button:active { opacity: 0.85; }
 
-a { color: var(--link); font-weight: 600; }
+a { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }

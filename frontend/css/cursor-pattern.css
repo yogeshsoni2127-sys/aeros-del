@@ -1,0 +1,172 @@
+/* ═══════════════════════════════════════════════════════════════
+   AEROS — Cursor-reactive background pattern (Warp-inspired)
+   Quiet warm canvas by default. On hover, the cursor reveals a
+   terminal-dot-matrix + contour-ring pattern with a warm spotlight.
+   All motion is lerped in JS (60fps, transform/opacity only).
+   Layers are pointer-events:none and sit behind content.
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  --mx: 50vw;
+  --my: 40vh;
+  --spot-r: 340px;
+  --glow-opacity: 0;
+}
+
+html, body {
+  background: var(--canvas);
+}
+
+/* ── Static base: faint dot matrix, always on (very quiet) ───── */
+#bg-static-grid {
+  position: fixed;
+  inset: -40px;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgba(247, 245, 240, 0.055) 1px, transparent 1.3px);
+  background-size: 28px 28px;
+  background-position: center;
+  opacity: 1;
+  will-change: transform;
+}
+
+/* ── Warm vignette for depth ──────────────────────────────────── */
+#bg-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(247, 245, 240, 0.045), transparent 55%),
+    radial-gradient(100% 100% at 50% 110%, rgba(0, 0, 0, 0.35), transparent 60%);
+}
+
+/* ── Cursor pattern: revealed only near the pointer ──────────── */
+#bg-cursor-pattern {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: var(--glow-opacity, 0);
+  transition: opacity 600ms cubic-bezier(0.22, 1, 0.36, 1);
+  background-image:
+    /* contour rings emanating from cursor */
+    repeating-radial-gradient(
+      circle at var(--mx) var(--my),
+      rgba(247, 245, 240, 0.10) 0px,
+      rgba(247, 245, 240, 0.10) 1px,
+      transparent 1px,
+      transparent 30px
+    ),
+    /* bright dot matrix */
+    radial-gradient(circle, rgba(247, 245, 240, 0.16) 1px, transparent 1.4px),
+    /* fine grid lines */
+    linear-gradient(rgba(247, 245, 240, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(247, 245, 240, 0.05) 1px, transparent 1px);
+  background-size: auto, 28px 28px, 112px 112px, 112px 112px;
+  background-position: 0 0, center, center, center;
+  -webkit-mask-image: radial-gradient(
+    var(--spot-r) at var(--mx) var(--my),
+    black 0%,
+    rgba(0, 0, 0, 0.6) 42%,
+    transparent 72%
+  );
+  mask-image: radial-gradient(
+    var(--spot-r) at var(--mx) var(--my),
+    black 0%,
+    rgba(0, 0, 0, 0.6) 42%,
+    transparent 72%
+  );
+  will-change: background-position;
+}
+
+/* Hovering interactive elements widens the spotlight */
+body[data-hover="true"] #bg-cursor-pattern {
+  --spot-r: 440px;
+}
+body[data-hover="true"] {
+  --spot-r: 440px;
+}
+
+/* ── Warm spotlight glow that trails the cursor ───────────────── */
+#cursorGlow {
+  position: fixed;
+  left: 0; top: 0;
+  width: 560px; height: 560px;
+  z-index: 0;
+  pointer-events: none;
+  opacity: var(--glow-opacity, 0);
+  background: radial-gradient(
+    circle,
+    rgba(232, 176, 75, 0.10) 0%,
+    rgba(247, 245, 240, 0.06) 28%,
+    transparent 62%
+  );
+  transform: translate(-50%, -50%);
+  transition: opacity 600ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+body[data-hover="true"] #cursorGlow {
+  background: radial-gradient(
+    circle,
+    rgba(232, 176, 75, 0.14) 0%,
+    rgba(247, 245, 240, 0.08) 30%,
+    transparent 64%
+  );
+}
+
+/* ── Small precision ring (ambient, native cursor stays) ──────── */
+#cursorDot {
+  position: fixed;
+  left: 0; top: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: var(--glow-opacity, 0);
+  transition: opacity 400ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+#cursorDot::before {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 0; top: 0;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 12px rgba(247, 245, 240, 0.7);
+}
+#cursorDot::after {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 0; top: 0;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(247, 245, 240, 0.35);
+  transform: translate(-50%, -50%);
+  animation: cursor-breathe 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+body[data-hover="true"] #cursorDot::after {
+  border-color: rgba(247, 245, 240, 0.6);
+  width: 40px; height: 40px;
+}
+
+/* Content must sit above the pattern layers */
+.topbar, .layout, .pulse-layer {
+  position: relative;
+  z-index: 1;
+}
+.topbar { z-index: 50; }
+.pulse-layer { z-index: 999; }
+
+/* Touch devices: no cursor pattern, keep static grid only */
+@media (pointer: coarse) {
+  #bg-cursor-pattern, #cursorGlow, #cursorDot { display: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #bg-cursor-pattern, #cursorGlow, #cursorDot { display: none !important; }
+}

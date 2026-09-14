@@ -1,13 +1,14 @@
 /* ═══════════════════════════════════════════════════════════════
-   AEROS — Reusable Component Styles (Neobrutalism edition)
+   AEROS — Reusable Component Styles (Warp-inspired edition)
+   Quiet off-white CTAs · 3px radii · hairlines · no shadows.
    ═══════════════════════════════════════════════════════════════ */
 
-/* ── Loading shimmer (ink sweep on warm surface) ────────────────── */
+/* ── Loading shimmer (warm sweep, very subtle) ────────────────── */
 .shimmer {
   position: relative;
   overflow: hidden;
-  background: var(--surface-soft);
-  border: var(--border-w) solid var(--border);
+  background: var(--canvas-soft);
+  border: 1px solid var(--hairline);
   border-radius: var(--radius-sm);
 }
 .shimmer::after {
@@ -18,119 +19,104 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(28, 41, 60, 0.12),
+    rgba(247, 245, 240, 0.06),
     transparent
   );
-  animation: shimmer 1.4s infinite;
+  animation: shimmer 1.8s var(--ease-warp, cubic-bezier(0.22,1,0.36,1)) infinite;
 }
 
-/* ── Status badges: bordered tags ─────────────────────────────── */
+/* ── Status badges ────────────────────────────────────────────── */
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: var(--font-data);
-  font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--text);
-  background: var(--card);
-  border: var(--border-w) solid var(--border);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-pop-sm);
-  padding: 2px 10px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--body-strong);
+  background: transparent;
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-pill);
+  padding: 3px 10px;
 }
 
-/* ── Skeleton generic ─────────────────────────────────────────── */
+/* ── Skeleton ─────────────────────────────────────────────────── */
 .skeleton {
   background: linear-gradient(
-    100deg, var(--surface-soft) 40%, #ffffff 50%,
-    var(--surface-soft) 60%
+    100deg, var(--canvas-soft) 40%, #44403b 50%,
+    var(--canvas-soft) 60%
   );
   background-size: 200% 100%;
-  animation: skeleton 1.2s linear infinite;
-  border: var(--border-w) solid var(--border);
+  animation: skeleton 1.6s linear infinite;
+  border: 1px solid var(--hairline);
   border-radius: var(--radius-sm);
   height: 14px;
   margin: 4px 0;
 }
 
-/* ── Header "last updated" stamp ────────────────────────────────── */
-.updated {
-  font-family: var(--font-data);
-  font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  color: var(--text);
-  background: var(--card);
-  border: var(--border-w) solid var(--border);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-pop-sm);
-  padding: 4px 10px;
-  white-space: nowrap;
-}
-
-/* ── Station search: boxed brutalist input ────────────────────── */
-.station-search-wrap { margin-bottom: 8px; }
+/* ── Station search: quiet dark input ─────────────────────────── */
+.station-search-wrap { margin-bottom: 10px; }
 .station-search {
   width: 100%;
-  height: 44px;
-  font-family: var(--font-body);
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--text);
-  background: var(--card);
-  border: var(--border-w) solid var(--border);
+  height: 36px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--ink);
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
   border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-pop-sm);
   padding: 8px 12px;
   outline: none;
+  transition: border-color 180ms cubic-bezier(0.22,1,0.36,1), background 180ms cubic-bezier(0.22,1,0.36,1);
 }
-.station-search::placeholder { color: var(--muted-soft); font-weight: 400; }
-.station-search:focus { border-color: var(--secondary); box-shadow: 3px 3px 0 var(--secondary); }
+.station-search::placeholder { color: var(--mute); font-weight: 400; }
+.station-search:hover { border-color: #4f4943; }
+.station-search:focus { border-color: var(--ink); background: #242019; }
 
-/* ── Action buttons: primary yellow / secondary white ─────────── */
+/* ── Action buttons: off-white primary, ghost secondary ───────── */
 .mini-btn {
-  font-family: var(--font-head);
-  font-size: 0.9375rem;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
   line-height: 1;
-  color: var(--text);
+  color: var(--on-primary);
   background: var(--primary);
-  border: var(--border-w) solid var(--border);
+  border: 1px solid var(--primary);
   border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-pop-sm);
-  padding: 10px 18px;
+  padding: 8px 14px;
   cursor: pointer;
-  transition: transform 0.1s, box-shadow 0.1s;
+  transition: opacity 180ms cubic-bezier(0.22,1,0.36,1), transform 180ms cubic-bezier(0.22,1,0.36,1), background 180ms cubic-bezier(0.22,1,0.36,1);
 }
-.mini-btn:hover { background: var(--primary-pressed); }
-.mini-btn:active { transform: translate(2px, 2px); box-shadow: var(--shadow-press); }
+.mini-btn:hover { background: #e8e2d5; transform: translateY(-1px); }
+.mini-btn:active { transform: translateY(0) scale(0.98); opacity: 0.9; }
 
-/* ── Advisory language toggle: segmented buttons ──────────────── */
-.lang-toggle { display: flex; gap: 6px; }
+/* ── Advisory language toggle ─────────────────────────────────── */
+.lang-toggle { display: flex; gap: 2px; background: var(--canvas); border: 1px solid var(--hairline); border-radius: var(--radius-sm); padding: 2px; }
 .lang-toggle button {
-  font-family: var(--font-head);
-  font-size: 0.8125rem;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  padding: 6px 12px;
-  border: var(--border-w) solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--card);
-  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--mute);
   cursor: pointer;
-  transition: transform 0.1s, box-shadow 0.1s;
+  transition: all 180ms cubic-bezier(0.22,1,0.36,1);
 }
-.lang-toggle button.active {
-  color: #1C293C;
-  background: var(--primary);
-  box-shadow: var(--shadow-pop-sm);
-}
+.lang-toggle button.active { color: var(--on-primary); background: var(--primary); }
+.lang-toggle button:not(.active):hover { color: var(--ink); }
 
-/* ── Ticker: pause on hover so advisories stay readable ─────────── */
+/* ── Ticker: pause on hover so advisories stay readable ────────── */
 .ticker-bar:hover .ticker-track .ticker-text { animation-play-state: paused; }
+
+/* ── Scroll reveal (added by cursor-pattern.js observer) ──────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 600ms cubic-bezier(0.22,1,0.36,1), transform 600ms cubic-bezier(0.22,1,0.36,1);
+}
+.reveal.is-visible { opacity: 1; transform: none; }

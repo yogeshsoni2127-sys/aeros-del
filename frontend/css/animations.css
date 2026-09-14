@@ -1,6 +1,12 @@
 /* ═══════════════════════════════════════════════════════════════
-   AEROS — Animations & Micro-interactions
+   AEROS — Animations & Micro-interactions (Warp-inspired)
+   Quiet, slow, single-ease system. One easing curve everywhere,
+   transform + opacity only (GPU-cheap, 60fps).
    ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  --ease-warp: cubic-bezier(0.22, 1, 0.36, 1);
+}
 
 @keyframes shimmer {
   100% { transform: translateX(100%); }
@@ -13,12 +19,12 @@
 
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.7); }
+  50% { opacity: 0.45; transform: scale(0.72); }
 }
 
 @keyframes pulse-ring {
-  0% { opacity: 0.6; transform: scale(0.98); }
-  100% { opacity: 0; transform: scale(1.04); }
+  0% { opacity: 0.5; transform: scale(0.985); }
+  100% { opacity: 0; transform: scale(1.03); }
 }
 
 @keyframes marquee {
@@ -27,8 +33,8 @@
 }
 
 @keyframes fire-pulse {
-  0%, 100% { transform: scale(1); opacity: 0.95; }
-  50% { transform: scale(1.6); opacity: 0.55; }
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.35); opacity: 0.55; }
 }
 
 @keyframes gauge-needle {
@@ -42,19 +48,46 @@
 }
 
 @keyframes pop-in {
-  0% { opacity: 0; transform: scale(0.9); }
-  100% { opacity: 1; transform: scale(1); }
+  0% { opacity: 0; transform: scale(0.97) translateY(4px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-.fade-in { animation: fade-slide-in 0.35s ease both; }
-.pop-in { animation: pop-in 0.25s ease both; }
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
-/* Smooth map transitions handled by MapLibre; keep CSS FPS light */
+@keyframes cursor-breathe {
+  0%, 100% { opacity: 0.55; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 0.9; transform: translate(-50%, -50%) scale(1.12); }
+}
+
+.fade-in { animation: fade-slide-in 0.45s var(--ease-warp) both; }
+.pop-in { animation: pop-in 0.35s var(--ease-warp) both; }
+
+/* Smooth theme / state changes */
 body {
-  transition: background-color 0.5s;
+  transition: background-color 0.5s var(--ease-warp);
+}
+
+.card, .map-overlay, .station-row, .stable-row, .alert-card,
+button, input, .toggle, .pill {
+  transition-timing-function: var(--ease-warp);
+}
+
+/* Buttery scrolling everywhere */
+html { scroll-behavior: smooth; }
+.side-panel, .station-list, .stable-list, .alert-list {
+  scroll-behavior: smooth;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html { scroll-behavior: auto; }
   .ticker-track .ticker-text { animation: none; padding-left: 0; }
+  #cursorGlow, #cursorDot, #bg-cursor-pattern { display: none !important; }
 }
