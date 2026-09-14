@@ -287,7 +287,7 @@
           const cur = s.current || {};
           const h24 = s.forecast_h24 || {};
           const ls = s.last_step;
-          const color = cur.color || '#808080';
+          const color = Utils.stationDisplayColor(cur.color || '#808080');
           const err = ls != null ? ls.error : null;
           const errColor = err == null ? 'var(--text-dim)' : (Math.abs(err) < 15 ? 'var(--toxic)' : (Math.abs(err) < 40 ? 'var(--amber)' : 'var(--danger)'));
           return `
@@ -496,19 +496,19 @@
       const worst = dom?.worst;
       const worstEl = document.getElementById('mWorst');
       if (worst) {
-        const c = worst.color || '#fff';
+        const c = Utils.stationDisplayColor(worst.color || '#1C293C');
         worstEl.textContent = `${worst.station_name?.split(',')[0] || '—'} (${worst.aqi})`;
         worstEl.style.color = c;
-        worstEl.style.textShadow = `0 0 12px ${c}`;
+        worstEl.style.textShadow = 'none';
       } else {
         worstEl.textContent = '—';
       }
 
       const m = document.getElementById('mMeanAqi');
       if (dom?.mean_aqi != null) {
-        const c = Utils.aqiColor(dom.mean_aqi);
+        const c = Utils.stationDisplayColor(Utils.aqiColor(dom.mean_aqi));
         m.style.color = c;
-        m.style.textShadow = `0 0 12px ${c}`;
+        m.style.textShadow = 'none';
       }
     },
 
@@ -519,7 +519,7 @@
       this.aisiGauge.update(a, color);
 
       document.getElementById('aisiValue').textContent = a.toFixed(1);
-      document.getElementById('aisiValue').style.color = '#ffffff';
+      document.getElementById('aisiValue').style.color = '#1C293C';
       document.getElementById('aisiValue').style.textShadow = 'none';
       document.getElementById('aisiCategory').textContent = aisi.category || '—';
 
@@ -572,7 +572,7 @@
         .sort((a, b) => (b.current?.aqi || 0) - (a.current?.aqi || 0))
         .map((s) => {
           const c = s.current || {};
-          const color = c.color || '#808080';
+          const color = Utils.stationDisplayColor(c.color || '#808080');
           const sel = this.state.selectedStation === s.id ? 'selected' : '';
           const histN = s.history_count != null ? s.history_count : ((s.history || []).length);
           const stale = histN < 6 ? ' · only ' + histN + ' pts' : ' · ' + histN + ' pts';

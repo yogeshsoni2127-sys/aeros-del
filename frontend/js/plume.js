@@ -31,8 +31,8 @@
       el.innerHTML = arrivals
         .slice(0, 6)
         .map((a) => {
-          const color = a.estimated_contribution_pm25 > 10 ? '#ff3838'
-            : a.estimated_contribution_pm25 > 4 ? '#ffb800' : '#39ff14';
+          const color = a.estimated_contribution_pm25 > 10 ? '#DC2626'
+            : a.estimated_contribution_pm25 > 4 ? '#D97706' : '#16A34A';
           return `<span class="chip" style="border-color:${color}">
             <b style="color:${color}">+${Number(a.estimated_contribution_pm25).toFixed(1)} µg/m³</b>
             arrive in ~${a.arrival_hours}h · ${a.distance_km} km

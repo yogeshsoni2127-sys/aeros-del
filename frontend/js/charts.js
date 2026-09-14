@@ -29,11 +29,11 @@
           plugins: {
             legend: { display: false },
             tooltip: {
-              backgroundColor: 'rgba(0,0,0,0.92)',
-              borderColor: 'rgba(255,255,255,0.25)',
-              borderWidth: 1,
-              titleColor: '#fff',
-              bodyColor: 'rgba(255,255,255,0.8)',
+              backgroundColor: 'rgba(255,255,255,0.97)',
+              borderColor: '#1C293C',
+              borderWidth: 2,
+              titleColor: '#1C293C',
+              bodyColor: '#33415c',
               callbacks: {
                 label: (c) => {
                   const y = c.parsed.y;
@@ -47,15 +47,15 @@
           },
           scales: {
             x: {
-              grid: { color: 'rgba(255,255,255,0.05)' },
-              ticks: { color: 'rgba(255,255,255,0.45)', maxRotation: 0, maxTicksLimit: 10, font: { size: 10 } },
+              grid: { color: 'rgba(28,41,60,0.08)' },
+              ticks: { color: '#5b6b82', maxRotation: 0, maxTicksLimit: 10, font: { size: 10, weight: '700' } },
             },
             y: {
               // Zero-based so small wiggles can't masquerade as big swings.
               beginAtZero: true,
               suggestedMax: undefined,
-              grid: { color: 'rgba(255,255,255,0.06)' },
-              ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 10 } },
+              grid: { color: 'rgba(28,41,60,0.10)' },
+              ticks: { color: '#5b6b82', font: { size: 10, weight: '700' } },
             },
           },
         },
@@ -132,8 +132,8 @@
           datasets.push({
             label: 'Observed AQI (past)',
             data: histAqi.concat(new Array((f.timestamps || []).length).fill(null)),
-            borderColor: '#666666',
-            backgroundColor: 'rgba(255,255,255,0.06)',
+            borderColor: '#1C293C',
+            backgroundColor: 'rgba(67,45,215,0.06)',
             borderWidth: 2,
             pointRadius: 0,
             tension: 0.25,
@@ -181,8 +181,8 @@
           datasets.push({
             label: `Observed ${key.toUpperCase()} (past)`,
             data: histVals.concat(new Array(base.length).fill(null)),
-            borderColor: '#666666',
-            backgroundColor: 'rgba(255,255,255,0.06)',
+            borderColor: '#1C293C',
+            backgroundColor: 'rgba(67,45,215,0.06)',
             borderWidth: 2,
             pointRadius: 0,
             tension: 0.25,
@@ -193,7 +193,7 @@
         datasets.push({
           label: `${Utils.pollutantName(key)} forecast`,
           data: pad.concat(base),
-          borderColor: '#ffffff',
+          borderColor: '#432DD7',
           backgroundColor: (ctx) => this._gradientFill(ctx),
           fill: histVals.some((v) => v != null) ? false : true,
           borderWidth: 2.5,
@@ -205,8 +205,8 @@
         datasets.push({
           label: 'Upper bound (90th)',
           data: pad.concat(hi),
-          borderColor: 'rgba(255,255,255,0.35)',
-          backgroundColor: 'rgba(255,255,255,0.08)',
+          borderColor: 'rgba(67,45,215,0.55)',
+          backgroundColor: 'rgba(67,45,215,0.10)',
           borderDash: [4, 4],
           pointRadius: 0,
           fill: '-1',
@@ -217,7 +217,7 @@
         datasets.push({
           label: 'Lower bound (10th)',
           data: pad.concat(lo),
-          borderColor: 'rgba(255,255,255,0.35)',
+          borderColor: 'rgba(67,45,215,0.55)',
           borderDash: [4, 4],
           pointRadius: 0,
           fill: false,
@@ -240,8 +240,8 @@
         datasets.push({
           label: Utils.pollutantName(this.pollutant),
           data: (f[this.pollutant] || []),
-          borderColor: '#666666',
-          backgroundColor: 'rgba(255,255,255,0.08)',
+          borderColor: '#1C293C',
+          backgroundColor: 'rgba(67,45,215,0.10)',
           fill: true,
           borderWidth: 2,
           pointRadius: 0,
@@ -268,17 +268,17 @@
 
     _gradientFill(ctx) {
       const { chartArea } = ctx.chart;
-      if (!chartArea) return 'rgba(255,255,255,0.10)';
+      if (!chartArea) return 'rgba(67,45,215,0.10)';
       const g = ctx.chart.ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-      g.addColorStop(0, 'rgba(255,255,255,0.25)');
-      g.addColorStop(1, 'rgba(255,255,255,0.0)');
+      g.addColorStop(0, 'rgba(67,45,215,0.28)');
+      g.addColorStop(1, 'rgba(67,45,215,0.0)');
       return g;
     }
 
     _pointColors(ctx, alpha = 1) {
       const { index } = ctx;
       const colors = this.forecast ? (this.forecast.colors || []) : [];
-      if (!colors.length) return 'rgba(255,255,255,0.6)';
+      if (!colors.length) return '#432DD7';
       const c = colors[index] || colors[0];
       return alpha < 1 ? hexA(c, alpha) : c;
     }

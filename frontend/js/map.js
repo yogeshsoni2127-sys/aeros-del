@@ -6,8 +6,8 @@
   'use strict';
 
   const DELHI_CENTER = [77.2090, 28.6139];
-  // Readable first: 'light' (Voyager) is the default because dark_all is
-  // near-black on many laptop screens. Users can switch anytime; the
+  // Readable first: 'light' (Voyager) is the default — the Neobrutalism
+  // theme is a warm light surface. Users can switch to dark anytime; the
   // choice persists in localStorage.
   const BASE_STYLES = {
     light: {
@@ -29,7 +29,7 @@
       const v = localStorage.getItem('aeros-basemap');
       if (v === 'dark' || v === 'light') return v;
     } catch (e) { /* private mode */ }
-    return 'dark';
+    return 'light';
   }
   const FIRE_REGIONS = [
     { name: 'Punjab', colors: '#ff3838', lat: 30.8, lon: 75.4 },
@@ -42,7 +42,7 @@
       this.onStationClick = null;
       this.currentHour = 0;
       this._forecasts = {};
-      // Basemap: saved choice (default dark = noir canvas). MapTiler key,
+      // Basemap: saved choice (default light = warm surface). MapTiler key,
       // when configured, upgrades the dark style only.
       this.baseStyle = savedBasemap();
       document.body.dataset.basemap = this.baseStyle;
@@ -170,8 +170,8 @@
         paint: {
           'circle-radius': ['interpolate', ['linear'], ['zoom'], 7, 5, 10, 8],
           'circle-color': ['get', 'color'],
-          'circle-stroke-color': 'rgba(255,255,255,0.85)',
-          'circle-stroke-width': 1.4,
+          'circle-stroke-color': '#1C293C',
+          'circle-stroke-width': 1.6,
         },
       });
       // Readable place labels — the "black map, can't read locations"
@@ -229,7 +229,7 @@
         type: 'line',
         source: 'plumes',
         paint: {
-          'line-color': ['interpolate', ['linear'], ['get', 'estimated_contribution_pm25'], 0, '#39ff14', 5, '#ffb800', 15, '#ff3838'],
+          'line-color': ['interpolate', ['linear'], ['get', 'estimated_contribution_pm25'], 0, '#16A34A', 5, '#D97706', 15, '#DC2626'],
           'line-width': 2.2,
           'line-opacity': 0.85,
           'line-dasharray': [2, 1.4],
@@ -246,10 +246,9 @@
         type: 'line',
         source: 'delhi-ring',
         paint: {
-          // Hairline white: Bugatti has no accent color — the old cyan
-          // ring was chrome. Boundary reads via dash rhythm, not hue.
-          'line-color': 'rgba(255,255,255,0.35)',
-          'line-width': 1.2,
+          // Ink dash: boundary reads via rhythm on either basemap.
+          'line-color': 'rgba(28,41,60,0.55)',
+          'line-width': 2,
           'line-dasharray': [1, 1],
         },
       });
@@ -417,16 +416,19 @@
     return ['interpolate', ['linear'], ['get', cfg.prop]].concat(cfg.stops);
   }
 
-  // Display override, basemap-aware: Moderate-yellow (#ffff00) vanishes
-  // on the light basemap (render black) but reads perfectly on dark map
-  // and dark cards (keep yellow). Duplicated here so the map module never
-  // depends on utils.js load order.
+  // Display override for the light theme: Moderate-yellow (#ffff00)
+  // and Satisfactory-mint (#9cff9c) wash out on warm white, so they
+  // render as warning-amber / success-green. Duplicated here so the map
+  // module never depends on utils.js load order.
+  const DISPLAY_COLOR_MAP = {
+    '#ffff00': '#D97706',
+    '#9cff9c': '#16A34A',
+  };
+
   function stationColor(hex) {
-    if (typeof hex === 'string' && hex.toLowerCase() === '#ffff00') {
-      try {
-        if (document.body.dataset.basemap === 'light') return '#000000';
-      } catch (e) { /* no DOM — keep source color */ }
-      return hex;
+    if (typeof hex === 'string') {
+      const mapped = DISPLAY_COLOR_MAP[hex.toLowerCase()];
+      if (mapped) return mapped;
     }
     return hex;
   }

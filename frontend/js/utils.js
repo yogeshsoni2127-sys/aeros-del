@@ -35,15 +35,19 @@
     return aqiCategory(aqi).color;
   }
 
-  // Display override, basemap-aware: Moderate-yellow (#ffff00) vanishes
-  // on the light basemap (render black) but reads perfectly on dark map
-  // and dark cards (keep yellow). AQI math elsewhere is untouched.
+  // Display override for the light Neobrutalism surface: raw Moderate
+  // yellow (#ffff00) and Satisfactory mint (#9cff9c) wash out on warm
+  // white cards, so they render as warning-amber / success-green.
+  // AQI math and stored data elsewhere are untouched.
+  const DISPLAY_COLOR_MAP = {
+    '#ffff00': '#D97706',
+    '#9cff9c': '#16A34A',
+  };
+
   function stationDisplayColor(hex) {
-    if (typeof hex === 'string' && hex.toLowerCase() === '#ffff00') {
-      try {
-        if (document.body.dataset.basemap === 'light') return '#000000';
-      } catch (e) { /* no DOM — keep source color */ }
-      return hex;
+    if (typeof hex === 'string') {
+      const mapped = DISPLAY_COLOR_MAP[hex.toLowerCase()];
+      if (mapped) return mapped;
     }
     return hex;
   }

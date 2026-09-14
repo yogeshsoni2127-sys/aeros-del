@@ -7,7 +7,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Roboto:wght@300;400;500&family=Saira+Condensed:wght@400&family=Cormorant+Garamond:wght@400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
   <link rel="stylesheet" href="css/main.css">
@@ -23,15 +23,15 @@
         <svg viewBox="0 0 48 48" width="38" height="38" aria-hidden="true">
           <defs>
             <linearGradient id="brandGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#ffffff"/>
-              <stop offset="100%" stop-color="#cccccc"/>
+              <stop offset="0%" stop-color="#1C293C"/>
+              <stop offset="100%" stop-color="#432DD7"/>
             </linearGradient>
           </defs>
-          <circle cx="24" cy="24" r="21" fill="none" stroke="url(#brandGrad)" stroke-width="2"/>
+          <circle cx="24" cy="24" r="21" fill="none" stroke="url(#brandGrad)" stroke-width="2.5"/>
           <path d="M24 6 C32 12 36 18 36 26 a12 12 0 1 1 -24 0 C12 18 16 12 24 6Z"
-                fill="none" stroke="url(#brandGrad)" stroke-width="1.6"/>
-          <path d="M14 30 C20 26 28 26 34 30" fill="none" stroke="#ffffff" stroke-width="2" stroke-dasharray="3 3"/>
-          <circle cx="24" cy="24" r="3" fill="#ffffff"/>
+                fill="none" stroke="url(#brandGrad)" stroke-width="2"/>
+          <path d="M14 30 C20 26 28 26 34 30" fill="none" stroke="#1C293C" stroke-width="2.5" stroke-dasharray="3 3"/>
+          <circle cx="24" cy="24" r="3" fill="#1C293C"/>
         </svg>
       </div>
       <div class="brand-text">
@@ -108,8 +108,8 @@
             <label class="toggle"><input type="checkbox" id="layPlumes" checked><span class="dot" style="--c:#ffb800"></span>Plumes</label>
             <label class="toggle"><input type="checkbox" id="layStations" checked><span class="dot" style="--c:#9cff9c"></span>Stations</label>
             <div class="base-toggle" title="Basemap style">
-              <button data-base-btn="light">Light</button>
-              <button data-base-btn="dark" class="active">Dark</button>
+              <button data-base-btn="light" class="active">Light</button>
+              <button data-base-btn="dark">Dark</button>
             </div>
           </div>
         </div>

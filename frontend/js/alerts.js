@@ -12,12 +12,13 @@
     Critical: '#ff3838',
   };
 
+  // Left-border strip colors, tuned for the light theme (no pale fills).
   const CATEGORY_COLOR = {
-    'Good': '#00e400',
-    'Satisfactory': '#9cff9c',
-    'Moderate': '#ffff00',
-    'Poor': '#ff7e00',
-    'Very Poor': '#ff0000',
+    'Good': '#16A34A',
+    'Satisfactory': '#16A34A',
+    'Moderate': '#D97706',
+    'Poor': '#c2570b',
+    'Very Poor': '#DC2626',
     'Severe': '#99004c',
     'Severe+': '#7e0023',
   };
