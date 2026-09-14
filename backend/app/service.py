@@ -574,6 +574,46 @@ class AQIService:
             except Exception as e:
                 logger.debug("Overlay failed for %s: %s", sid, e)
 
+    MIN_RAM_GB_FOR_TFT = 1.5
+
+    @staticmethod
+    def _host_ram_gb() -> float:
+        """Total host RAM in GiB (cgroup-aware inside Docker)."""
+        try:
+            import os
+            for path in ("/sys/fs/cgroup/memory.max",
+                         "/sys/fs/cgroup/memory/memory.limit_in_bytes"):
+                try:
+                    with open(path) as f:
+                        val = int(f.read().strip())
+                    if 0 < val < (1 << 62):
+                        return val / (1 << 30)
+                except (OSError, ValueError):
+                    continue
+            return os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES") \
+                / (1 << 30)
+        except Exception:
+            return 0.0
+
+    @classmethod
+    def _tft_allowed(cls) -> bool:
+        import os
+        flag = (os.getenv("TFT_ENABLED") or "auto").strip().lower()
+        if flag in ("0", "false", "no", "off"):
+            logger.info("research-daily: TFT disabled by TFT_ENABLED=0 "
+                        "(tree-only)")
+            return False
+        if flag in ("1", "true", "yes", "on"):
+            return True
+        ram = cls._host_ram_gb()
+        if ram and ram < cls.MIN_RAM_GB_FOR_TFT:
+            logger.warning(
+                "research-daily: %.2f GiB host RAM < %.1f GiB — TFT "
+                "needs ~450MB+ alone, staying tree-only (set "
+                "TFT_ENABLED=1 to override)", ram, cls.MIN_RAM_GB_FOR_TFT)
+            return False
+        return True
+
     @staticmethod
     def _ist_now() -> datetime:
         return datetime.now(timezone.utc).astimezone(
@@ -674,10 +714,14 @@ class AQIService:
         bridge = getattr(self, "research_daily", None)
         if bridge is None or not bridge.available:
             return
-        # Attach the TFT third member when its checkpoints are present;
-        # absent -> bridge keeps the tree-only fallback per station.
+        # TFT third member: needs ~450MB+ for torch/forecasting alone
+        # (measured), so it only attaches on hosts with headroom.
+        # Render free (512MB) serves tree-only; a bigger plan (or
+        # TFT_ENABLED=1) activates all three with zero code change.
+        # TFT_ENABLED=0 forces tree-only (testing / lean deploys).
         try:
-            if getattr(bridge, "tft", None) is None:
+            if getattr(bridge, "tft", None) is None and \
+                    self._tft_allowed():
                 from backend.ml.tft_daily import TFTDailyEnsemble
                 tft = TFTDailyEnsemble(
                     ckpt_dir=str(MODELS_DIR / "research" / "tft"))
@@ -783,6 +827,13 @@ class AQIService:
                     applied, with_current,
                     f"; unmapped: {unmapped}" if unmapped else "")
         self.state["research_daily_n"] = applied
+        try:
+            import resource
+            rss_mb = resource.getrusage(
+                resource.RUSAGE_SELF).ru_maxrss / 1048576
+            logger.info("research-daily: peak RSS %.0f MB", rss_mb)
+        except Exception:
+            pass
 
     def _hist_days_for_tft(self, bridge, loc, seed_rows, live_days):
         """Date-anchored daily history for TFT encoder windows.
