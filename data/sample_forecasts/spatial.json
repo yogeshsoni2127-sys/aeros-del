@@ -13,13 +13,13 @@
       "properties": {
         "id": "alipur",
         "name": "Alipur",
-        "pm25": 63.7,
-        "pm10": 119.9,
-        "no2": 50.5,
-        "o3": 23.0,
-        "aqi": 113.0,
-        "category": "Moderate",
-        "color": "#ffff00"
+        "pm25": 128.4,
+        "pm10": 184.1,
+        "no2": 53.6,
+        "o3": 27.8,
+        "aqi": 306.0,
+        "category": "Very Poor",
+        "color": "#ff0000"
       }
     },
     {
@@ -34,11 +34,11 @@
       "properties": {
         "id": "anand-vihar",
         "name": "Anand Vihar",
-        "pm25": 91.7,
-        "pm10": 230.9,
-        "no2": 34.8,
-        "o3": 28.0,
-        "aqi": 227.0,
+        "pm25": 135.3,
+        "pm10": 272.5,
+        "no2": 36.1,
+        "o3": 31.0,
+        "aqi": 322.0,
         "category": "Very Poor",
         "color": "#ff0000"
       }
@@ -55,13 +55,13 @@
       "properties": {
         "id": "ashok-vihar",
         "name": "Ashok Vihar",
-        "pm25": 70.2,
-        "pm10": 142.7,
-        "no2": 29.3,
-        "o3": 30.7,
-        "aqi": 134.0,
-        "category": "Moderate",
-        "color": "#ffff00"
+        "pm25": 102.7,
+        "pm10": 201.0,
+        "no2": 33.4,
+        "o3": 38.2,
+        "aqi": 242.0,
+        "category": "Poor",
+        "color": "#ff9900"
       }
     },
     {
@@ -76,13 +76,13 @@
       "properties": {
         "id": "aya-nagar",
         "name": "Aya Nagar",
-        "pm25": 56.6,
-        "pm10": 107.1,
-        "no2": 17.7,
-        "o3": 22.5,
-        "aqi": 105.0,
-        "category": "Moderate",
-        "color": "#ffff00"
+        "pm25": 115.7,
+        "pm10": 168.9,
+        "no2": 29.2,
+        "o3": 28.7,
+        "aqi": 286.0,
+        "category": "Poor",
+        "color": "#ff9900"
       }
     },
     {
@@ -97,13 +97,13 @@
       "properties": {
         "id": "burari",
         "name": "Burari",
-        "pm25": 62.6,
-        "pm10": 110.0,
-        "no2": 22.4,
-        "o3": 40.3,
-        "aqi": 109.0,
-        "category": "Moderate",
-        "color": "#ffff00"
+        "pm25": 121.6,
+        "pm10": 171.7,
+        "no2": 28.7,
+        "o3": 51.3,
+        "aqi": 301.0,
+        "category": "Very Poor",
+        "color": "#ff0000"
       }
     },
     {
@@ -118,13 +118,13 @@
       "properties": {
         "id": "cantonment",
         "name": "Cantonment",
-        "pm25": 44.6,
-        "pm10": 78.3,
-        "no2": 15.8,
-        "o3": 34.6,
-        "aqi": 78.0,
-        "category": "Satisfactory",
-        "color": "#92d050"
+        "pm25": 56.8,
+        "pm10": 136.8,
+        "no2": 24.7,
+        "o3": 44.8,
+        "aqi": 125.0,
+        "category": "Moderate",
+        "color": "#ffff00"
       }
     },
     {
@@ -139,13 +139,13 @@
       "properties": {
         "id": "commonwealth",
         "name": "Commonwealth",
-        "pm25": 65.1,
-        "pm10": 103.3,
-        "no2": 22.0,
-        "o3": 31.3,
-        "aqi": 117.0,
-        "category": "Moderate",
-        "color": "#ffff00"
+        "pm25": 129.5,
+        "pm10": 170.8,
+        "no2": 25.7,
+        "o3": 38.7,
+        "aqi": 307.0,
+        "category": "Very Poor",
+        "color": "#ff0000"
       }
     },
     {
@@ -160,13 +160,13 @@
       "properties": {
         "id": "crri-mathura",
         "name": "CRRI Mathura Rd",
-        "pm25": 60.1,
-        "pm10": 100.8,
-        "no2": 20.0,
-        "o3": 32.3,
-        "aqi": 101.0,
-        "category": "Moderate",
-        "color": "#ffff00"
+        "pm25": 116.3,
+        "pm10": 164.9,
+        "no2": 25.4,
+        "o3": 36.9,
+        "aqi": 288.0,
+        "category": "Poor",
+        "color": "#ff9900"
       }
     },
     {
@@ -181,13 +181,13 @@
       "properties": {
         "id": "dwarka-sec8",
         "name": "Dwarka",
-        "pm25": 53.7,
-        "pm10": 138.1,
-        "no2": 33.2,
-        "o3": 21.8,
-        "aqi": 125.0,
-        "category": "Moderate",
-        "color": "#ffff00"
+        "pm25": 105.8,
+        "pm10": 202.8,
+        "no2": 35.7,
+        "o3": 28.6,
+        "aqi": 253.0,
+        "category": "Poor",
+        "color": "#ff9900"
       }
     },
     {
@@ -202,11 +202,11 @@
       "properties": {
         "id": "ignou",
         "name": "IGNOU",
-        "pm25": 52.8,
-        "pm10": 109.8,
-        "no2": 11.5,
-        "o3": 35.4,
-        "aqi": 107.0,
+        "pm25": 65.0,
+        "pm10": 171.5,
+        "no2": 21.5,
+        "o3": 45.5,
+        "aqi": 148.0,
         "category": "Moderate",
         "color": "#ffff00"
       }
@@ -223,13 +223,13 @@
       "properties": {
         "id": "ihbas",
         "name": "IHBAS",
-        "pm25": 92.6,
-        "pm10": 96.6,
-        "no2": 40.4,
-        "o3": 22.2,
-        "aqi": 209.0,
-        "category": "Poor",
-        "color": "#ff9900"
+        "pm25": 135.1,
+        "pm10": 135.4,
+        "no2": 46.5,
+        "o3": 26.9,
+        "aqi": 312.0,
+        "category": "Very Poor",
+        "color": "#ff0000"
       }
     },
     {
@@ -244,13 +244,13 @@
       "properties": {
         "id": "ito",
         "name": "ITO",
-        "pm25": 85.8,
-        "pm10": 204.3,
-        "no2": 69.6,
-        "o3": 36.2,
-        "aqi": 186.0,
-        "category": "Moderate",
-        "color": "#ffff00"
+        "pm25": 127.6,
+        "pm10": 251.2,
+        "no2": 72.2,
+        "o3": 47.1,
+        "aqi": 306.0,
+        "category": "Very Poor",
+        "color": "#ff0000"
       }
     },
     {
@@ -265,13 +265,13 @@
       "properties": {
         "id": "jnu",
         "name": "JNU",
-        "pm25": 62.7,
-        "pm10": 102.9,
-        "no2": 29.2,
-        "o3": 18.7,
-        "aqi": 109.0,
-        "category": "Moderate",
-        "color": "#ffff00"
+        "pm25": 115.2,
+        "pm10": 164.7,
+        "no2": 34.9,
+        "o3": 26.8,
+        "aqi": 284.0,
+        "category": "Poor",
+        "color": "#ff9900"
       }
     },
     {
@@ -286,13 +286,13 @@
       "properties": {
         "id": "karni-singh",
         "name": "Karni Singh",
-        "pm25": 58.3,
-        "pm10": 118.3,
-        "no2": 22.2,
-        "o3": 26.9,
-        "aqi": 112.0,
-        "category": "Moderate",
-        "color": "#ffff00"
+        "pm25": 117.5,
+        "pm10": 176.2,
+        "no2": 25.8,
+        "o3": 32.6,
+        "aqi": 292.0,
+        "category": "Poor",
+        "color": "#ff9900"
       }
     },
     {
@@ -307,13 +307,13 @@
       "properties": {
         "id": "lodhi-road",
         "name": "Lodhi Road",
-        "pm25": 58.4,
-        "pm10": 116.4,
-        "no2": 14.9,
-        "o3": 35.7,
-        "aqi": 111.0,
-        "category": "Moderate",
-        "color": "#ffff00"
+        "pm25": 120.5,
+        "pm10": 171.8,
+        "no2": 20.9,
+        "o3": 46.1,
+        "aqi": 300.0,
+        "category": "Poor",
+        "color": "#ff9900"
       }
     },
     {
@@ -328,11 +328,11 @@
       "properties": {
         "id": "major-dhyan-chand",
         "name": "Dhyan Chand",
-        "pm25": 51.8,
-        "pm10": 101.3,
-        "no2": 42.7,
-        "o3": 23.8,
-        "aqi": 101.0,
+        "pm25": 71.6,
+        "pm10": 155.4,
+        "no2": 49.1,
+        "o3": 28.7,
+        "aqi": 139.0,
         "category": "Moderate",
         "color": "#ffff00"
       }
@@ -349,13 +349,13 @@
       "properties": {
         "id": "mandir-marg",
         "name": "Mandir Marg",
-        "pm25": 65.7,
-        "pm10": 127.5,
-        "no2": 24.6,
-        "o3": 30.3,
-        "aqi": 119.0,
-        "category": "Moderate",
-        "color": "#ffff00"
+        "pm25": 112.7,
+        "pm10": 180.7,
+        "no2": 28.7,
+        "o3": 35.3,
+        "aqi": 276.0,
+        "category": "Poor",
+        "color": "#ff9900"
       }
     },
     {
@@ -370,13 +370,13 @@
       "properties": {
         "id": "mundka",
         "name": "Mundka",
-        "pm25": 70.0,
-        "pm10": 179.9,
-        "no2": 64.5,
-        "o3": 18.8,
-        "aqi": 153.0,
-        "category": "Moderate",
-        "color": "#ffff00"
+        "pm25": 114.1,
+        "pm10": 221.8,
+        "no2": 63.9,
+        "o3": 25.9,
+        "aqi": 280.0,
+        "category": "Poor",
+        "color": "#ff9900"
       }
     },
     {
@@ -391,13 +391,13 @@
       "properties": {
         "id": "punjabi-bagh",
         "name": "Punjabi Bagh",
-        "pm25": 74.6,
-        "pm10": 153.3,
-        "no2": 32.4,
-        "o3": 21.8,
-        "aqi": 149.0,
-        "category": "Moderate",
-        "color": "#ffff00"
+        "pm25": 103.0,
+        "pm10": 193.7,
+        "no2": 35.7,
+        "o3": 28.0,
+        "aqi": 243.0,
+        "category": "Poor",
+        "color": "#ff9900"
       }
     },
     {
@@ -412,13 +412,13 @@
       "properties": {
         "id": "pusa",
         "name": "Pusa",
-        "pm25": 57.7,
-        "pm10": 120.7,
-        "no2": 36.8,
-        "o3": 33.6,
-        "aqi": 114.0,
-        "category": "Moderate",
-        "color": "#ffff00"
+        "pm25": 123.7,
+        "pm10": 177.1,
+        "no2": 39.0,
+        "o3": 41.0,
+        "aqi": 299.0,
+        "category": "Very Poor",
+        "color": "#ff0000"
       }
     },
     {
@@ -433,13 +433,13 @@
       "properties": {
         "id": "rk-puram",
         "name": "RK Puram",
-        "pm25": 63.5,
-        "pm10": 131.2,
-        "no2": 34.5,
-        "o3": 33.3,
-        "aqi": 121.0,
-        "category": "Moderate",
-        "color": "#ffff00"
+        "pm25": 118.2,
+        "pm10": 182.1,
+        "no2": 39.2,
+        "o3": 41.0,
+        "aqi": 294.0,
+        "category": "Poor",
+        "color": "#ff9900"
       }
     },
     {
@@ -454,11 +454,11 @@
       "properties": {
         "id": "shadipur",
         "name": "Shadipur",
-        "pm25": 51.2,
-        "pm10": 104.4,
-        "no2": 56.3,
-        "o3": 33.2,
-        "aqi": 103.0,
+        "pm25": 82.1,
+        "pm10": 166.2,
+        "no2": 55.3,
+        "o3": 37.8,
+        "aqi": 174.0,
         "category": "Moderate",
         "color": "#ffff00"
       }
@@ -475,13 +475,13 @@
       "properties": {
         "id": "sri-aurobindo",
         "name": "Aurobindo Marg",
-        "pm25": 57.6,
-        "pm10": 108.7,
-        "no2": 18.6,
-        "o3": 21.8,
-        "aqi": 106.0,
-        "category": "Moderate",
-        "color": "#ffff00"
+        "pm25": 109.0,
+        "pm10": 166.0,
+        "no2": 25.1,
+        "o3": 28.3,
+        "aqi": 263.0,
+        "category": "Poor",
+        "color": "#ff9900"
       }
     },
     {
@@ -496,13 +496,13 @@
       "properties": {
         "id": "talkatora",
         "name": "Talkatora",
-        "pm25": 68.3,
-        "pm10": 115.4,
-        "no2": 22.6,
-        "o3": 24.4,
-        "aqi": 128.0,
-        "category": "Moderate",
-        "color": "#ffff00"
+        "pm25": 111.9,
+        "pm10": 165.5,
+        "no2": 25.3,
+        "o3": 31.5,
+        "aqi": 273.0,
+        "category": "Poor",
+        "color": "#ff9900"
       }
     },
     {
@@ -517,13 +517,13 @@
       "properties": {
         "id": "wazirpur",
         "name": "Wazirpur",
-        "pm25": 64.5,
-        "pm10": 175.7,
-        "no2": 25.6,
-        "o3": 19.8,
-        "aqi": 150.0,
-        "category": "Moderate",
-        "color": "#ffff00"
+        "pm25": 129.8,
+        "pm10": 233.2,
+        "no2": 30.8,
+        "o3": 25.5,
+        "aqi": 308.0,
+        "category": "Very Poor",
+        "color": "#ff0000"
       }
     }
   ]

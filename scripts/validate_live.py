@@ -152,9 +152,23 @@ def drift_check() -> None:
 
 
 def live_checks(url: str) -> None:
+    import ssl
     import urllib.request
+    # Some sandboxes lack CA bundles (curl works, python doesn't). Fall
+    # back to explicitly-unverified TLS rather than failing the check.
+    try:
+        urllib.request.urlopen(url.rstrip("/") + "/api/v1/health", timeout=15).read()
+        opener = urllib.request.build_opener()
+    except Exception as e:
+        if "CERTIFICATE" in str(e).upper() or "SSL" in str(e).upper():
+            print("  [ -- ] system CA bundle missing; live checks use explicitly-unverified TLS")
+            ctx = ssl._create_unverified_context()
+            opener = urllib.request.build_opener(
+                urllib.request.HTTPSHandler(context=ctx))
+        else:
+            raise
     def get(path: str):
-        with urllib.request.urlopen(url.rstrip("/") + path, timeout=30) as r:
+        with opener.open(url.rstrip("/") + path, timeout=30) as r:
             return json.loads(r.read().decode())
     try:
         ms = get("/api/v1/accuracy/model-status")

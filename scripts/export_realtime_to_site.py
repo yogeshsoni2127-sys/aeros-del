@@ -164,7 +164,10 @@ def parse_blend(label: str) -> dict:
 
 
 def latest_forecast_file() -> Path:
-    files = sorted((REPO_ROOT / "data" / "forecasts").glob("forecast_aqi_72h_*.csv"))
+    # mtime, NOT name: run-ids are random hex, so alphabetical order can
+    # easily pick a stale file over a fresh one (observed live 2026-09-14).
+    files = (REPO_ROOT / "data" / "forecasts").glob("forecast_aqi_72h_*.csv")
+    files = sorted(files, key=lambda p: (p.stat().st_mtime, p.name))
     if not files:
         raise FileNotFoundError("no forecast_aqi_72h_*.csv in data/forecasts")
     return files[-1]
