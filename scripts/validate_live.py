@@ -323,10 +323,20 @@ def live_checks(url: str) -> None:
     check("live overlay on 25 stations", ms.get("real_overlay_n") == 25,
           f"overlay_n={ms.get('real_overlay_n')}")
     try:
-        fc = get("/api/v1/stations/alipur/forecast?hours=72")
+        stations = get("/api/v1/stations")
+        sids = [s.get("id") for s in stations.get("stations", []) if s.get("id")]
+        sid = "alipur" if "alipur" in sids else (sids[0] if sids else None)
+        check("live stations list non-empty", bool(sids), f"{len(sids)} stations")
+    except Exception as e:
+        check("live stations list", False, str(e)[:100])
+        sid = None
+    try:
+        if sid is None:
+            raise RuntimeError("no station id to probe")
+        fc = get(f"/api/v1/stations/{sid}/forecast?hours=72")
         check("live station forecast (72pts + daily)",
               len(fc.get("timestamps", [])) == 72 and len(fc.get("daily", [])) == 3,
-              f"{len(fc.get('timestamps', []))} pts")
+              f"{sid}: {len(fc.get('timestamps', []))} pts")
     except Exception as e:
         check("live station forecast", False, str(e)[:100])
     try:
