@@ -1,9 +1,9 @@
 {
   "station_id": "ignou",
   "station_name": "IGNOU_Maidan Garhi, Delhi - DPCC",
-  "generated_at": "2026-09-15T00:12:10.293552+00:00",
+  "generated_at": "2026-09-16T00:02:49.323966+00:00",
   "source": "sih-p2 ensemble (TFT+XGBoost+LightGBM)",
-  "source_file": "forecast_aqi_72h_e21a0157.csv",
+  "source_file": "forecast_aqi_72h_ec095811.csv",
   "downscaled": true,
   "native_resolution": "daily",
   "diurnal_note": "hourly shape = cosine peak per pollutant, amplitude scaled per station by observed day-to-day CoV; 24h mean == model daily value exactly; day junctions smoothed",
