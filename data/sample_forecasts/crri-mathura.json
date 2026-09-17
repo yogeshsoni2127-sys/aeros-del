@@ -1,9 +1,9 @@
 {
   "station_id": "crri-mathura",
   "station_name": "CRRI Mathura Road, New Delhi - IMD",
-  "generated_at": "2026-09-16T00:02:49.323966+00:00",
+  "generated_at": "2026-09-17T00:13:41.677785+00:00",
   "source": "sih-p2 ensemble (TFT+XGBoost+LightGBM)",
-  "source_file": "forecast_aqi_72h_ec095811.csv",
+  "source_file": "forecast_aqi_72h_f15581f5.csv",
   "downscaled": true,
   "native_resolution": "daily",
   "diurnal_note": "hourly shape = cosine peak per pollutant, amplitude scaled per station by observed day-to-day CoV; 24h mean == model daily value exactly; day junctions smoothed",
