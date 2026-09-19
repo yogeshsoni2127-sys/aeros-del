@@ -1,9 +1,9 @@
 {
   "station_id": "alipur",
   "station_name": "Alipur, Delhi - DPCC",
-  "generated_at": "2026-09-18T00:28:13.343440+00:00",
+  "generated_at": "2026-09-19T00:08:06.831918+00:00",
   "source": "sih-p2 ensemble (TFT+XGBoost+LightGBM)",
-  "source_file": "forecast_aqi_72h_7022c1b4.csv",
+  "source_file": "forecast_aqi_72h_d749eaf4.csv",
   "downscaled": true,
   "native_resolution": "daily",
   "diurnal_note": "hourly shape = cosine peak per pollutant, amplitude scaled per station by observed day-to-day CoV; 24h mean == model daily value exactly; day junctions smoothed",
