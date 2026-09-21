@@ -1,9 +1,9 @@
 {
   "station_id": "lodhi-road",
   "station_name": "Lodhi Road, New Delhi - IMD",
-  "generated_at": "2026-09-20T00:23:57.020835+00:00",
+  "generated_at": "2026-09-21T00:07:26.717922+00:00",
   "source": "sih-p2 ensemble (TFT+XGBoost+LightGBM)",
-  "source_file": "forecast_aqi_72h_f348fb6e.csv",
+  "source_file": "forecast_aqi_72h_cdcd46ea.csv",
   "downscaled": true,
   "native_resolution": "daily",
   "diurnal_note": "hourly shape = cosine peak per pollutant, amplitude scaled per station by observed day-to-day CoV; 24h mean == model daily value exactly; day junctions smoothed",
