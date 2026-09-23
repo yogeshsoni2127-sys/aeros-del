@@ -1,9 +1,9 @@
 {
   "station_id": "aya-nagar",
   "station_name": "Aya Nagar, New Delhi - IMD",
-  "generated_at": "2026-09-22T00:09:55.029744+00:00",
+  "generated_at": "2026-09-23T00:14:59.666266+00:00",
   "source": "sih-p2 ensemble (TFT+XGBoost+LightGBM)",
-  "source_file": "forecast_aqi_72h_df9df3d3.csv",
+  "source_file": "forecast_aqi_72h_8e4f819a.csv",
   "downscaled": true,
   "native_resolution": "daily",
   "diurnal_note": "hourly shape = cosine peak per pollutant, amplitude scaled per station by observed day-to-day CoV; 24h mean == model daily value exactly; day junctions smoothed",
