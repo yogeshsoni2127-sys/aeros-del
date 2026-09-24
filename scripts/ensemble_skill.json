@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-23T00:14:59.666266+00:00",
-  "source_forecast": "forecast_aqi_72h_8e4f819a.csv",
+  "generated_at": "2026-09-24T00:07:11.987297+00:00",
+  "source_forecast": "forecast_aqi_72h_e4c15f14.csv",
   "models": {
     "tft": "Temporal Fusion Transformer (pytorch-forecasting)",
     "xgboost": "XGBRegressor per pollutant",
