@@ -1,9 +1,9 @@
 {
   "station_id": "pusa",
   "station_name": "Pusa, Delhi - DPCC",
-  "generated_at": "2026-09-25T00:11:33.397104+00:00",
+  "generated_at": "2026-09-26T00:10:55.879198+00:00",
   "source": "sih-p2 ensemble (TFT+XGBoost+LightGBM)",
-  "source_file": "forecast_aqi_72h_5dde8c0e.csv",
+  "source_file": "forecast_aqi_72h_ff95603f.csv",
   "downscaled": true,
   "native_resolution": "daily",
   "diurnal_note": "hourly shape = cosine peak per pollutant, amplitude scaled per station by observed day-to-day CoV; 24h mean == model daily value exactly; day junctions smoothed",
