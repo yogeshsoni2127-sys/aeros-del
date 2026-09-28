@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-09-27T00:14:22.625920+00:00",
+  "generated_at": "2026-09-28T00:13:40.719798+00:00",
   "description": "Real SIH-p2 ensemble 72h forecasts (daily model, hourly downscaled)",
-  "source_file": "forecast_aqi_72h_d0b0a024.csv",
+  "source_file": "forecast_aqi_72h_28eb092a.csv",
   "station_forecasts": [
     "alipur.json",
     "anand-vihar.json",
